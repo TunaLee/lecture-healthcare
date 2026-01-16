@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>머신러닝 심화 08강 - Voting & Stacking</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Nanum Gothic',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh}.container{width:100%;height:100vh;background:white;display:flex;flex-direction:column}#slidesContainer{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px}#slidesContainer::-webkit-scrollbar{width:10px}#slidesContainer::-webkit-scrollbar-thumb{background:#667eea;border-radius:5px}.slide{padding:60px;display:none}.slide.active{display:block}h1{font-size:48px;color:#667eea;margin-bottom:10px;text-align:center}h2{font-size:36px;color:#333;margin-bottom:30px;border-bottom:3px solid #667eea;padding-bottom:15px}h3{font-size:28px;color:#555;margin-bottom:20px;margin-top:30px}h4{font-size:22px;color:#667eea;margin-bottom:15px;margin-top:20px}p,li{font-size:18px;line-height:1.8;color:#555;margin-bottom:15px}ul,ol{margin-left:30px;margin-bottom:20px}.subtitle{font-size:24px;color:#888;text-align:center;margin-bottom:40px}.box{background:#f8f9fa;padding:25px;border-radius:10px;border-left:4px solid #667eea;margin:20px 0}.success-box{background:#d4edda;border-left:4px solid #28a745;padding:25px;border-radius:10px;margin:20px 0}.warning-box{background:#fff3cd;border-left:4px solid #ffc107;padding:25px;border-radius:10px;margin:20px 0}.danger-box{background:#f8d7da;border-left:4px solid #dc3545;padding:25px;border-radius:10px;margin:20px 0}.example-box{background:#e7f3ff;border-left:4px solid #2196F3;padding:25px;border-radius:10px;margin:20px 0}.formula{background:#2c3e50;color:white;padding:25px;border-radius:10px;font-size:20px;text-align:center;margin:25px 0;font-family:'Courier New',monospace;line-height:1.6}pre{background:#2c3e50;color:#f8f9fa;padding:20px;border-radius:10px;overflow-x:auto;margin:15px 0;font-size:14px;line-height:1.5}code{background:#2c3e50;color:#ffd93d;padding:2px 6px;border-radius:3px;font-family:'Courier New',monospace}table{width:100%;border-collapse:collapse;margin:25px 0}th,td{padding:12px;text-align:left;border:1px solid #ddd}th{background:#667eea;color:white;font-weight:bold}tr:nth-child(even){background:#f8f9fa}.controls{display:flex;justify-content:space-between;align-items:center;padding:20px 40px;background:#f8f9fa;border-top:2px solid #e0e0e0;position:sticky;bottom:0}.navigation{display:flex;gap:20px;align-items:center}button{background:#667eea;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;font-size:16px;font-weight:bold}button:hover:not(:disabled){background:#5568d3}button:disabled{background:#ccc;cursor:not-allowed;opacity:0.6}input[type="number"]{padding:8px 12px;border:2px solid #667eea;border-radius:5px;width:100px;font-size:16px}.slide-counter{font-size:18px;font-weight:bold;color:#555}
+
+        /* ========================================
+           인쇄 및 PDF 변환용 스타일
+           ======================================== */
+        @media print {
+            /* 기본 설정 */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            body {
+                background: white !important;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .container {
+                width: 100%;
+                height: auto;
+                background: white;
+                display: block;
+            }
+            
+            #slidesContainer {
+                padding: 0;
+                overflow: visible;
+            }
+            
+            /* 모든 슬라이드 표시 및 페이지 분할 */
+            .slide {
+                display: block !important;
+                page-break-after: always;
+                page-break-inside: avoid;
+                padding: 60px 80px;
+                min-height: 100vh;
+                box-sizing: border-box;
+                position: relative;
+            }
+            
+            .slide:last-child {
+                page-break-after: auto;
+            }
+            
+            /* 컨트롤 버튼 숨기기 */
+            .controls {
+                display: none !important;
+            }
+            
+            /* 제목 스타일 */
+            h1 {
+                font-size: 40px;
+                color: #667eea;
+                page-break-after: avoid;
+            }
+            
+            h2 {
+                font-size: 32px;
+                color: #333;
+                border-bottom: 3px solid #667eea;
+                padding-bottom: 12px;
+                page-break-after: avoid;
+            }
+            
+            h3 {
+                font-size: 24px;
+                color: #555;
+                page-break-after: avoid;
+            }
+            
+            h4 {
+                font-size: 20px;
+                color: #667eea;
+                page-break-after: avoid;
+            }
+            
+            /* 텍스트 */
+            p, li {
+                font-size: 15px;
+                line-height: 1.6;
+                color: #333;
+            }
+            
+            ul, ol {
+                margin-left: 25px;
+            }
+            
+            /* 박스 요소들 */
+            .box, .success-box, .warning-box, .danger-box, .example-box {
+                page-break-inside: avoid;
+                margin: 15px 0;
+                padding: 20px;
+                border-radius: 8px;
+            }
+            
+            .box {
+                background: #f8f9fa !important;
+                border-left: 4px solid #667eea;
+            }
+            
+            .success-box {
+                background: #d4edda !important;
+                border-left: 4px solid #28a745;
+            }
+            
+            .warning-box {
+                background: #fff3cd !important;
+                border-left: 4px solid #ffc107;
+            }
+            
+            .danger-box {
+                background: #f8d7da !important;
+                border-left: 4px solid #dc3545;
+            }
+            
+            .example-box {
+                background: #e7f3ff !important;
+                border-left: 4px solid #2196F3;
+            }
+            
+            /* 공식 박스 */
+            .formula {
+                background: #2c3e50 !important;
+                color: white !important;
+                padding: 20px;
+                border-radius: 8px;
+                text-align: center;
+                page-break-inside: avoid;
+                font-family: 'Courier New', monospace;
+                font-size: 16px;
+            }
+            
+            /* 테이블 */
+            table {
+                page-break-inside: avoid;
+                border-collapse: collapse;
+                width: 100%;
+                margin: 15px 0;
+                font-size: 13px;
+            }
+            
+            th {
+                background: #667eea !important;
+                color: white !important;
+                padding: 10px;
+                border: 1px solid #ddd;
+            }
+            
+            td {
+                padding: 8px;
+                border: 1px solid #ddd;
+            }
+            
+            tr:nth-child(even) {
+                background: #f8f9fa !important;
+            }
+            
+            /* 코드 블록 */
+            pre {
+                background: #2c3e50 !important;
+                color: #f8f9fa !important;
+                padding: 15px;
+                border-radius: 8px;
+                page-break-inside: avoid;
+                font-size: 11px;
+                line-height: 1.4;
+                overflow-x: visible;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            
+            code {
+                background: #2c3e50 !important;
+                color: #ffd93d !important;
+                padding: 2px 4px;
+                border-radius: 3px;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
+            }
+            
+            /* 시각화 컨테이너 */
+            .visualization-container {
+                page-break-inside: avoid;
+                background: #ffffff !important;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 15px 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            /* 이미지 */
+            img {
+                max-width: 100%;
+                height: auto;
+                page-break-inside: avoid;
+            }
+            
+            /* SVG */
+            svg {
+                max-width: 100%;
+                height: auto;
+                page-break-inside: avoid;
+            }
+            
+            /* 링크 */
+            a {
+                color: #667eea;
+                text-decoration: none;
+            }
+            
+            /* 페이지 번호 추가 (선택사항) */
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+        }
+
+</style>
+</head>
+<body><div class="container"><div id="slidesContainer">
+<div class="slide active">
+<h1>머신러닝 심화 08강</h1>
+<div class="subtitle">앙상블 학습 ③ Voting & Stacking</div>
+<div class="box" >
+<h3>학습 목표</h3>
+<ul>
+<li>Voting 앙상블의 원리와 Hard/Soft Voting의 차이 이해하기</li>
+<li>Stacking의 메타 학습 개념 이해하기</li>
+<li>sklearn으로 Voting과 Stacking 구현하기</li>
+<li>하이퍼파라미터 튜닝 방법 익히기</li>
+</ul>
+</div>
+<div class="warning-box" >
+<h4>이전 강의 복습</h4>
+<p><strong>Bagging:</strong> 병렬 학습으로 분산 감소 (Random Forest)</p>
+<p><strong>Boosting:</strong> 순차 학습으로 편향 감소 (AdaBoost, XGBoost)</p>
+<p><strong>오늘:</strong> 이질적인 모델들의 조합</p>
+</div>
+</div>
+
+<div class="slide">
+<h2>Voting Ensemble 개요</h2>
+<div class="box">
+<h3>Voting이란?</h3>
+<p>여러 개의 <strong>서로 다른 알고리즘</strong>을 학습시킨 후, 각 모델의 예측 결과를 <strong>투표(Voting)</strong>를 통해 최종 결정하는 앙상블 기법입니다.</p>
+</div>
+<div class="box">
+<h3>집단 지성의 원리</h3>
+<p>콩도르세의 <strong>배심원 정리</strong>에 기반합니다.</p>
+<ul>
+<li>각 전문가가 51% 이상의 정확도를 가지면</li>
+<li>전문가 수가 증가할수록 집단의 정확도는 100%에 수렴</li>
+<li>단, 전문가들은 서로 <strong>독립적</strong>이어야 함</li>
+</ul>
+</div>
+<div class="success-box">
+<h4>Voting의 장점</h4>
+<ul>
+<li><strong>구현이 간단:</strong> 각 모델을 독립적으로 학습 후 결과만 결합</li>
+<li><strong>모델 다양성:</strong> 서로 다른 알고리즘의 장점 활용</li>
+<li><strong>과적합 감소:</strong> 개별 모델의 과적합을 상호 보완</li>
+<li><strong>안정성 향상:</strong> 한 모델의 실수를 다른 모델이 보정</li>
+</ul>
+</div>
+<div class="example-box">
+<h4>실생활 비유</h4>
+<p><strong>의료 진단:</strong> 내과, 영상의학과, 병리학 의사가 각자 진단하고 결과를 종합하여 최종 진단을 내리는 것과 유사합니다.</p>
+</div>
+</div>
+
+
+<div class="slide">
+<h2>Voting vs Bagging 비교</h2>
+
+<div class="visualization-container" style="min-height: 450px;">
+    <img src="data:image/png;base64,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" style="max-width: 100%; height: auto;" alt="Voting vs Bagging 비교">
+</div>
+
+<div class="box">
+    <h3>핵심 차이점</h3>
+    <table>
+        <tr>
+            <th>구분</th>
+            <th>Voting</th>
+            <th>Bagging</th>
+        </tr>
+        <tr>
+            <td><strong>모델 종류</strong></td>
+            <td style="background: #e7f3ff; font-weight: bold;">서로 다른 알고리즘</td>
+            <td style="background: #fff3cd; font-weight: bold;">같은 알고리즘</td>
+        </tr>
+        <tr>
+            <td><strong>데이터</strong></td>
+            <td style="background: #e7f3ff;">동일한 전체 데이터</td>
+            <td style="background: #fff3cd;">부트스트랩 샘플링</td>
+        </tr>
+        <tr>
+            <td><strong>다양성 확보</strong></td>
+            <td style="background: #e7f3ff;">알고리즘 차이</td>
+            <td style="background: #fff3cd;">데이터 샘플링</td>
+        </tr>
+        <tr>
+            <td><strong>예시</strong></td>
+            <td style="background: #e7f3ff;">LR + KNN + SVM</td>
+            <td style="background: #fff3cd;">DT + DT + DT</td>
+        </tr>
+    </table>
+</div>
+
+<div class="box">
+<h3>상세 비교</h3>
+<table style="width: 100%;">
+<tr>
+<th style="width: 50%; background: #2196F3; color: white;">Voting (왼쪽)</th>
+<th style="width: 50%; background: #f57c00; color: white;">Bagging (오른쪽)</th>
+</tr>
+<tr>
+<td style="vertical-align: top; padding: 15px;">
+<ul>
+<li><strong>모델:</strong> Linear Regression, KNN, SVM</li>
+<li><strong>학습 데이터:</strong> 전체 Dataset을 모두 사용</li>
+<li><strong>다양성:</strong> 서로 다른 알고리즘이 각자의 방식으로 학습</li>
+<li><strong>강점:</strong> 각 알고리즘의 장점을 모두 활용</li>
+</ul>
+</td>
+<td style="vertical-align: top; padding: 15px;">
+<ul>
+<li><strong>모델:</strong> Decision Tree만 반복 사용</li>
+<li><strong>학습 데이터:</strong> 부트스트랩 샘플링으로 다른 데이터셋</li>
+<li><strong>다양성:</strong> 같은 알고리즘이지만 다른 데이터로 학습</li>
+<li><strong>강점:</strong> 분산 감소, 안정적인 예측</li>
+</ul>
+</td>
+</tr>
+</table>
+</div>
+
+<div class="success-box">
+    <h4>비유로 이해하기</h4>
+    <p><strong>Voting:</strong> 내과 의사, 한의사, 물리치료사가 <strong>같은 환자</strong>를 보고 각자의 전문 분야에서 진단</p>
+    <p><strong>Bagging:</strong> 내과 의사 3명이 <strong>다른 검사 결과</strong>를 보고 각각 진단</p>
+</div>
+
+<div class="warning-box">
+    <h4>언제 무엇을 사용할까?</h4>
+    <p><strong>Voting 선택:</strong></p>
+    <ul>
+        <li>서로 다른 알고리즘의 강점을 모두 활용하고 싶을 때</li>
+        <li>각 알고리즘이 데이터의 다른 측면을 잘 포착할 것으로 예상될 때</li>
+        <li>모델 해석이 필요하고 각 알고리즘의 기여도를 알고 싶을 때</li>
+    </ul>
+    <p><strong>Bagging 선택:</strong></p>
+    <ul>
+        <li>하나의 알고리즘(주로 Decision Tree)을 안정화시키고 싶을 때</li>
+        <li>분산이 높은 모델의 과적합을 줄이고 싶을 때</li>
+        <li>빠르고 효율적인 병렬 학습이 필요할 때</li>
+    </ul>
+</div>
+
+<div class="example-box">
+    <h4>실무 관점</h4>
+    <p><strong>Bagging (Random Forest):</strong> 일반적으로 첫 번째 선택. 안정적이고 빠르며 효과적입니다.</p>
+    <p><strong>Voting:</strong> Bagging으로 충분하지 않을 때, 성능을 더 끌어올리기 위한 추가 시도로 사용합니다.</p>
+</div>
+</div>
+
+
+
+<div class="slide">
+<h2>Hard Voting (다수결 투표)</h2>
+<div class="box">
+<h3>Hard Voting이란?</h3>
+<p>각 모델이 예측한 <strong>클래스 레이블</strong>을 투표하여 <strong>가장 많은 표</strong>를 받은 클래스를 최종 예측으로 선택하는 방법입니다.</p>
+</div>
+<div class="formula">
+최종 예측 = argmax (각 클래스별 투표 수)<br><br>
+예: 클래스 A 3표, 클래스 B 2표 → 최종 예측: A
+</div>
+<div class="example-box">
+<h4>구체적 예시: 5개 모델로 고양이 vs 강아지 분류</h4>
+<table>
+<tr><th>모델</th><th>알고리즘</th><th>예측</th></tr>
+<tr><td>모델 1</td><td>Logistic Regression</td><td style="color:#28a745;font-weight:bold">고양이</td></tr>
+<tr><td>모델 2</td><td>Decision Tree</td><td style="color:#dc3545;font-weight:bold">강아지</td></tr>
+<tr><td>모델 3</td><td>SVM</td><td style="color:#28a745;font-weight:bold">고양이</td></tr>
+<tr><td>모델 4</td><td>KNN</td><td style="color:#28a745;font-weight:bold">고양이</td></tr>
+<tr><td>모델 5</td><td>Naive Bayes</td><td style="color:#dc3545;font-weight:bold">강아지</td></tr>
+</table>
+<p ><strong>투표 결과:</strong> 고양이 3표, 강아지 2표</p>
+<p style="font-size:20px;color:#28a745;font-weight:bold">→ 최종 예측: 고양이</p>
+</div>
+<div class="warning-box">
+<h4>Hard Voting 특징</h4>
+<ul>
+<li><strong>간단하고 직관적:</strong> 각 모델이 하나의 클래스만 선택</li>
+<li><strong>확률 정보 무시:</strong> 예측의 신뢰도는 고려하지 않음</li>
+<li><strong>홀수 모델 권장:</strong> 동점 방지를 위해 3, 5, 7개 등 홀수 개 사용</li>
+</ul>
+</div>
+</div>
+
+<div class="slide">
+<h2>Soft Voting (확률 기반 투표)</h2>
+<div class="box">
+<h3>Soft Voting이란?</h3>
+<p>각 모델이 예측한 <strong>클래스별 확률</strong>을 평균내어 <strong>가장 높은 평균 확률</strong>을 가진 클래스를 최종 예측으로 선택하는 방법입니다.</p>
+</div>
+<div class="formula">
+최종 확률 = (모델1 확률 + 모델2 확률 + ... + 모델N 확률) / N<br><br>
+최종 예측 = argmax (각 클래스별 평균 확률)
+</div>
+<div class="example-box">
+<h4>구체적 예시: 3개 모델의 확률 예측</h4>
+<table>
+<tr><th>모델</th><th>알고리즘</th><th>고양이 확률</th><th>강아지 확률</th><th>Hard 예측</th></tr>
+<tr><td>모델 1</td><td>Logistic Regression</td><td>0.70</td><td>0.30</td><td style="color:#28a745;font-weight:bold">고양이</td></tr>
+<tr><td>모델 2</td><td>Random Forest</td><td>0.55</td><td>0.45</td><td style="color:#28a745;font-weight:bold">고양이</td></tr>
+<tr><td>모델 3</td><td>SVM</td><td>0.48</td><td>0.52</td><td style="color:#dc3545;font-weight:bold">강아지</td></tr>
+</table>
+<div class="box" >
+<h4>Hard Voting 결과</h4>
+<p>고양이: 2표, 강아지: 1표 → <strong style="color:#28a745">최종 예측: 고양이</strong></p>
+</div>
+<div class="box">
+<h4>Soft Voting 계산</h4>
+<p>고양이 평균: (0.70 + 0.55 + 0.48) / 3 = <strong>0.577</strong></p>
+<p>강아지 평균: (0.30 + 0.45 + 0.52) / 3 = <strong>0.423</strong></p>
+<p >→ <strong style="color:#28a745">최종 예측: 고양이</strong> (평균 확률 0.577 > 0.423)</p>
+</div>
+</div>
+<div class="success-box">
+<h4>Soft Voting의 장점</h4>
+<ul>
+<li><strong>확률 정보 활용:</strong> 각 모델의 신뢰도(확률)를 반영</li>
+<li><strong>더 나은 성능:</strong> Hard Voting보다 일반적으로 성능이 우수</li>
+<li><strong>자신있는 모델 우대:</strong> 높은 확률로 예측한 모델의 영향력이 큼</li>
+</ul>
+</div>
+</div>
+
+<div class="slide">
+<h2>Hard Voting vs Soft Voting 비교</h2>
+<div class="example-box">
+<h3>극단적인 예시: Soft Voting의 우수성</h3>
+<table>
+<tr><th>모델</th><th>클래스 A 확률</th><th>클래스 B 확률</th><th>Hard 예측</th></tr>
+<tr><td>모델 1</td><td>0.51</td><td>0.49</td><td style="color:#2196F3;font-weight:bold">A</td></tr>
+<tr><td>모델 2</td><td>0.01</td><td>0.99</td><td style="color:#f57c00;font-weight:bold">B</td></tr>
+<tr><td>모델 3</td><td>0.52</td><td>0.48</td><td style="color:#2196F3;font-weight:bold">A</td></tr>
+</table>
+<table style="width: 100%; margin-top: 30px;">
+<tr>
+<th style="width: 50%; background: #2196F3; color: white;">Hard Voting</th>
+<th style="width: 50%; background: #f57c00; color: white;">Soft Voting</th>
+</tr>
+<tr>
+<td style="vertical-align: top; padding: 20px;">
+<p>A: 2표 (모델 1, 3)</p>
+<p>B: 1표 (모델 2)</p>
+<p style="margin-top:15px;font-size:20px;color:#2196F3;font-weight:bold">최종: A</p>
+</td>
+<td style="vertical-align: top; padding: 20px;">
+<p>A 평균: (0.51+0.01+0.52)/3 = 0.35</p>
+<p>B 평균: (0.49+0.99+0.48)/3 = 0.65</p>
+<p style="margin-top:15px;font-size:20px;color:#f57c00;font-weight:bold">최종: B</p>
+</td>
+</tr>
+</table>
+</div>
+<div class="warning-box">
+<h4>분석</h4>
+<p>모델 2는 B에 대해 <strong>99%의 높은 확률</strong>로 확신하지만, Hard Voting에서는 단지 "1표"로만 카운트됩니다.</p>
+<p>Soft Voting은 모델의 <strong>확신 정도</strong>를 반영하여 더 합리적인 결정을 내립니다.</p>
+</div>
+<table >
+<tr><th>구분</th><th>Hard Voting</th><th>Soft Voting</th></tr>
+<tr><td>입력</td><td>클래스 레이블</td><td>클래스별 확률</td></tr>
+<tr><td>계산 방법</td><td>다수결 (최빈값)</td><td>확률 평균</td></tr>
+<tr><td>신뢰도 반영</td><td>반영 안함</td><td>반영함</td></tr>
+<tr><td>성능</td><td>보통</td><td>더 우수</td></tr>
+<tr><td>요구사항</td><td>모든 분류기 가능</td><td>확률 예측 지원 필요</td></tr>
+<tr><td>사용 시기</td><td>간단한 문제, 확률 불가</td><td>복잡한 문제, 확률 가능</td></tr>
+</table>
+</div>
+
+
+<div class="slide">
+<h2>Voting - 데이터 흐름</h2>
+
+<div class="box">
+<h3>Voting의 핵심: 같은 데이터, 다른 알고리즘</h3>
+<p>모든 모델이 <strong>동일한 전체 데이터</strong>를 사용하지만, <strong>서로 다른 알고리즘</strong>으로 학습합니다.</p>
+</div>
+
+<div class="example-box">
+<h4>예시: 1000개 샘플을 가진 데이터셋</h4>
+</div>
+
+<table style="font-size: 17px;">
+<tr>
+<th style="width: 25%;">모델</th>
+<th style="width: 40%;">학습 데이터</th>
+<th style="width: 35%;">특징</th>
+</tr>
+
+<tr style="background: #e7f3ff;">
+<td style="font-weight: bold; font-size: 18px;">Linear Regression</td>
+<td>
+<strong>전체 데이터셋</strong><br>
+샘플 ID: [1, 2, 3, 4, 5, ..., 999, 1000]<br>
+<span style="color: #666;">→ 모든 1000개 샘플 사용</span>
+</td>
+<td>
+선형 관계 학습<br>
+빠른 학습<br>
+해석 가능
+</td>
+</tr>
+
+<tr style="background: #e7f3ff;">
+<td style="font-weight: bold; font-size: 18px;">K Nearest Neighbor</td>
+<td>
+<strong>전체 데이터셋</strong><br>
+샘플 ID: [1, 2, 3, 4, 5, ..., 999, 1000]<br>
+<span style="color: #666;">→ 모든 1000개 샘플 사용</span>
+</td>
+<td>
+거리 기반 학습<br>
+지역적 패턴<br>
+비선형 관계
+</td>
+</tr>
+
+<tr style="background: #e7f3ff;">
+<td style="font-weight: bold; font-size: 18px;">Support Vector Machine</td>
+<td>
+<strong>전체 데이터셋</strong><br>
+샘플 ID: [1, 2, 3, 4, 5, ..., 999, 1000]<br>
+<span style="color: #666;">→ 모든 1000개 샘플 사용</span>
+</td>
+<td>
+결정 경계 학습<br>
+마진 최대화<br>
+커널 트릭
+</td>
+</tr>
+
+<tr style="background: #fff3cd;">
+<td colspan="3" style="text-align: center; font-weight: bold; font-size: 18px; padding: 20px;">
+↓ 각 모델이 예측 생성 ↓
+</td>
+</tr>
+
+<tr style="background: #d4edda;">
+<td style="font-weight: bold; font-size: 18px;">Voting (결합)</td>
+<td>
+<strong>Hard Voting:</strong> 다수결<br>
+<strong>Soft Voting:</strong> 확률 평균<br>
+<span style="color: #666;">→ 세 모델의 예측 결합</span>
+</td>
+<td>
+최종 예측 생성<br>
+안정성 향상<br>
+과적합 감소
+</td>
+</tr>
+</table>
+
+<div class="success-box">
+<h4>Voting의 장점</h4>
+<ul>
+<li><strong>같은 데이터, 다른 관점:</strong> 각 알고리즘이 데이터의 다른 측면을 학습</li>
+<li><strong>간단한 구현:</strong> 각 모델을 독립적으로 학습</li>
+<li><strong>병렬 처리 가능:</strong> 모든 모델을 동시에 학습 가능</li>
+<li><strong>데이터 효율적:</strong> 모든 데이터를 최대한 활용</li>
+</ul>
+</div>
+
+<div class="warning-box">
+<h4>Bagging과의 차이</h4>
+<p><strong>Bagging:</strong> 같은 알고리즘 + <span style="color: #f57c00; font-weight: bold;">부트스트랩 샘플링된 다른 데이터</span></p>
+<p>예: DT #1 → [2, 5, 5, 9, 11, 15, 15, ...] (중복 허용)</p>
+<p><strong>Voting:</strong> <span style="color: #2196F3; font-weight: bold;">다른 알고리즘</span> + 전체 데이터 동일</p>
+<p>예: LR, KNN, SVM → [1, 2, 3, 4, 5, ..., 1000] (모두 동일)</p>
+</div>
+</div>
+
+<div class="slide">
+<h2>Voting Classifier - sklearn 기본 구현</h2>
+<div class="box">
+<h3>VotingClassifier 사용법</h3>
+<p>sklearn의 <code>VotingClassifier</code>를 사용하면 여러 모델을 쉽게 결합할 수 있습니다.</p>
+</div>
+<h4>1. 기본 구조</h4>
+<pre><code>from sklearn.ensemble import VotingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# 데이터 준비
+X, y = load_iris(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+# 개별 모델 정의
+model1 = LogisticRegression(random_state=42, max_iter=200)
+model2 = DecisionTreeClassifier(random_state=42)
+model3 = SVC(probability=True, random_state=42)  # Soft Voting용
+
+# Voting Classifier 생성
+voting_clf = VotingClassifier(
+    estimators=[
+        ('lr', model1),
+        ('dt', model2),
+        ('svc', model3)
+    ],
+    voting='soft'  # 'hard' 또는 'soft'
+)
+
+# 학습 및 예측
+voting_clf.fit(X_train, y_train)
+y_pred = voting_clf.predict(X_test)
+print(f"Voting 정확도: {accuracy_score(y_test, y_pred):.4f}")</code></pre>
+<div class="example-box">
+<h4>주요 파라미터</h4>
+<ul>
+<li><code>estimators</code>: 튜플 리스트 형태로 (이름, 모델) 쌍을 정의</li>
+<li><code>voting</code>: 'hard' 또는 'soft' 선택</li>
+<li><code>weights</code>: 각 모델의 가중치 (기본값: 모두 1)</li>
+<li><code>n_jobs</code>: 병렬 처리 작업 수 (-1: 모든 CPU 코어)</li>
+</ul>
+</div>
+</div>
+
+<div class="slide">
+<h2>실습: 개별 모델 vs Voting 성능 비교</h2>
+<pre><code>import numpy as np
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import VotingClassifier, RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+
+# 데이터 로드
+X, y = load_breast_cancer(return_X_y=True)
+
+# 개별 모델들
+models = {
+    'Logistic Regression': LogisticRegression(max_iter=1000, random_state=42),
+    'Decision Tree': DecisionTreeClassifier(random_state=42),
+    'Random Forest': RandomForestClassifier(n_estimators=100, random_state=42),
+    'SVM': SVC(probability=True, random_state=42),
+    'KNN': KNeighborsClassifier()
+}
+
+# 각 모델 개별 평가
+print("개별 모델 성능 (5-Fold Cross Validation)")
+print("=" * 60)
+for name, model in models.items():
+    scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')
+    print(f"{name:25s}: {scores.mean():.4f} (+/- {scores.std():.4f})")
+
+# Hard Voting
+hard_voting = VotingClassifier(
+    estimators=list(models.items()),
+    voting='hard'
+)
+hard_scores = cross_val_score(hard_voting, X, y, cv=5, scoring='accuracy')
+
+# Soft Voting
+soft_voting = VotingClassifier(
+    estimators=list(models.items()),
+    voting='soft'
+)
+soft_scores = cross_val_score(soft_voting, X, y, cv=5, scoring='accuracy')
+
+print("\n" + "=" * 60)
+print("Voting 앙상블 성능")
+print("=" * 60)
+print(f"Hard Voting              : {hard_scores.mean():.4f} (+/- {hard_scores.std():.4f})")
+print(f"Soft Voting              : {soft_scores.mean():.4f} (+/- {soft_scores.std():.4f})")</code></pre>
+<div class="success-box">
+<h4>예상 출력 (Breast Cancer 데이터)</h4>
+<pre style="background:white;color:#333">개별 모델 성능 (5-Fold Cross Validation)
+============================================================
+Logistic Regression      : 0.9596 (+/- 0.0107)
+Decision Tree            : 0.9263 (+/- 0.0206)
+Random Forest            : 0.9649 (+/- 0.0131)
+SVM                      : 0.9614 (+/- 0.0145)
+KNN                      : 0.9473 (+/- 0.0167)
+
+============================================================
+Voting 앙상블 성능
+============================================================
+Hard Voting              : 0.9649 (+/- 0.0109)
+Soft Voting              : 0.9719 (+/- 0.0098)</pre>
+</div>
+</div>
+
+<div class="slide">
+<h2>Voting 하이퍼파라미터 튜닝 - 가중치</h2>
+<div class="box">
+<h3>가중치 (weights) 설정</h3>
+<p>모델마다 다른 가중치를 부여하여 <strong>성능이 좋은 모델</strong>의 영향력을 높일 수 있습니다.</p>
+</div>
+<div class="formula">
+가중 평균 = (w₁ × 모델1 확률 + w₂ × 모델2 확률 + ...) / (w₁ + w₂ + ...)
+</div>
+<pre><code>from sklearn.ensemble import VotingClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.datasets import load_breast_cancer
+
+X, y = load_breast_cancer(return_X_y=True)
+
+# 모델 정의
+lr = LogisticRegression(max_iter=1000, random_state=42)
+rf = RandomForestClassifier(n_estimators=100, random_state=42)
+svc = SVC(probability=True, random_state=42)
+
+# 가중치 없는 경우 (기본: 모두 1)
+voting_equal = VotingClassifier(
+    estimators=[('lr', lr), ('rf', rf), ('svc', svc)],
+    voting='soft'
+)
+
+# 가중치 있는 경우 (Random Forest에 더 높은 가중치)
+voting_weighted = VotingClassifier(
+    estimators=[('lr', lr), ('rf', rf), ('svc', svc)],
+    voting='soft',
+    weights=[1, 3, 1]  # RF에 3배 가중치
+)
+
+# 성능 비교
+scores_equal = cross_val_score(voting_equal, X, y, cv=5, scoring='accuracy')
+scores_weighted = cross_val_score(voting_weighted, X, y, cv=5, scoring='accuracy')
+
+print(f"동일 가중치 : {scores_equal.mean():.4f} (+/- {scores_equal.std():.4f})")
+print(f"가중치 적용 : {scores_weighted.mean():.4f} (+/- {scores_weighted.std():.4f})")</code></pre>
+<div class="example-box">
+<h4>가중치 설정 전략</h4>
+<ul>
+<li><strong>개별 성능 기반:</strong> Cross-validation으로 각 모델 성능 평가 후 결정</li>
+<li><strong>도메인 지식:</strong> 문제 특성에 맞는 알고리즘에 더 높은 가중치</li>
+<li><strong>Grid Search:</strong> 여러 가중치 조합을 시도하여 최적값 찾기</li>
+</ul>
+</div>
+</div>
+
+
+<div class="slide">
+<h2>Voting - GridSearchCV로 가중치 최적화</h2>
+
+<div class="box">
+<h3>GridSearchCV를 사용한 체계적 탐색</h3>
+<p>여러 가중치 조합을 자동으로 시도하여 <strong>최적의 가중치</strong>를 찾을 수 있습니다.</p>
+</div>
+
+<h4>전체 코드</h4>
+<pre><code>from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import VotingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+
+# 데이터 준비
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# 모델 정의
+lr = LogisticRegression(max_iter=1000, random_state=42)
+rf = RandomForestClassifier(n_estimators=100, random_state=42)
+svc = SVC(probability=True, random_state=42)
+
+# VotingClassifier
+voting_clf = VotingClassifier(
+    estimators=[('lr', lr), ('rf', rf), ('svc', svc)],
+    voting='soft'
+)
+
+# 가중치 탐색 범위 정의
+param_grid = {
+    'weights': [
+        [1, 1, 1],  # 동일 가중치
+        [2, 1, 1],  # LR에 2배
+        [1, 2, 1],  # RF에 2배
+        [1, 1, 2],  # SVC에 2배
+        [2, 2, 1],  # LR, RF에 2배
+        [2, 1, 2],  # LR, SVC에 2배
+        [1, 2, 2],  # RF, SVC에 2배
+        [1, 3, 1],  # RF에 3배
+        [2, 3, 2],  # RF에 가장 높은 가중치
+        [3, 2, 1],  # LR에 가장 높은 가중치
+    ]
+}
+
+# Grid Search 실행
+grid_search = GridSearchCV(
+    voting_clf, 
+    param_grid, 
+    cv=5,  # 5-Fold Cross Validation
+    scoring='accuracy',
+    n_jobs=-1,  # 모든 CPU 코어 사용
+    verbose=1
+)
+
+grid_search.fit(X_train, y_train)
+
+# 결과 출력
+print("="*60)
+print("최적 가중치:", grid_search.best_params_['weights'])
+print(f"최적 CV 점수: {grid_search.best_score_:.4f}")
+print(f"테스트 점수: {grid_search.score(X_test, y_test):.4f}")
+
+print("\n" + "="*60)
+print("가중치별 성능 (상위 5개):")
+print("="*60)
+
+# 결과를 정렬하여 출력
+results = grid_search.cv_results_
+sorted_indices = results['rank_test_score'].argsort()
+
+for i in sorted_indices[:5]:
+    weights = param_grid['weights'][i]
+    mean_score = results['mean_test_score'][i]
+    std_score = results['std_test_score'][i]
+    print(f"{weights}: {mean_score:.4f} (+/- {std_score:.4f})")</code></pre>
+
+<div class="success-box">
+<h4>예상 출력 결과</h4>
+<pre style="background: white; color: #333;">============================================================
+최적 가중치: [1, 3, 1]
+최적 CV 점수: 0.9758
+테스트 점수: 0.9737
+
+============================================================
+가중치별 성능 (상위 5개):
+============================================================
+[1, 3, 1]: 0.9758 (+/- 0.0085)
+[1, 2, 2]: 0.9736 (+/- 0.0091)
+[2, 3, 2]: 0.9736 (+/- 0.0091)
+[1, 2, 1]: 0.9736 (+/- 0.0091)
+[2, 2, 1]: 0.9714 (+/- 0.0098)</pre>
+</div>
+
+<div class="example-box">
+<h4>결과 해석</h4>
+<p><strong>최적 가중치 [1, 3, 1]:</strong></p>
+<ul>
+<li>Random Forest가 가장 중요한 역할 (가중치 3)</li>
+<li>Logistic Regression과 SVC는 보조 역할 (가중치 1)</li>
+<li>이 조합으로 97.58%의 CV 정확도 달성</li>
+</ul>
+</div>
+
+<div class="warning-box">
+<h4>GridSearch 팁</h4>
+<ul>
+<li><strong>탐색 범위:</strong> 너무 많은 조합은 시간이 오래 걸림. 10-20개 정도가 적당</li>
+<li><strong>가중치 패턴:</strong> [1,2,1], [1,3,1]처럼 하나만 높이거나, [2,2,1]처럼 두 개를 높이는 패턴 시도</li>
+<li><strong>교차 검증:</strong> cv=5 이상 사용하여 안정적인 결과 확보</li>
+<li><strong>성능 향상:</strong> n_jobs=-1로 병렬 처리하여 속도 향상</li>
+</ul>
+</div>
+
+<div class="danger-box">
+<h4>주의사항</h4>
+<p><strong>과적합 주의:</strong> 가중치를 너무 세밀하게 튜닝하면 훈련 데이터에 과적합될 수 있습니다. 항상 <strong>별도의 테스트 세트</strong>로 최종 평가하세요!</p>
+</div>
+</div>
+
+
+<div class="slide">
+<h2>Stacking Ensemble 개요</h2>
+<div class="box">
+<h3>Stacking이란?</h3>
+<p><strong>Stacking (Stacked Generalization)</strong>은 여러 기본 모델(Base Learners)의 예측을 <strong>메타 모델(Meta Learner)</strong>의 입력으로 사용하여 최종 예측을 수행하는 앙상블 기법입니다.</p>
+</div>
+<div class="box">
+<h3>Stacking의 핵심 아이디어</h3>
+<ul>
+<li><strong>2단계 학습:</strong> Base Models → Meta Model</li>
+<li><strong>메타 학습:</strong> Base Models의 예측을 학습하는 Meta Model</li>
+<li><strong>모델 다양성:</strong> 서로 다른 알고리즘 조합으로 상호 보완</li>
+</ul>
+</div>
+<div class="example-box">
+<h4>Stacking 구조</h4>
+<p><strong>Level 0 (Base Models):</strong></p>
+<p>→ Decision Tree, Random Forest, SVM, KNN 등 여러 모델이 독립적으로 학습</p>
+<p>→ 각 모델은 예측값 P₁, P₂, P₃, P₄를 생성</p>
+<p><strong>Level 1 (Meta Model):</strong></p>
+<p>→ Base Models의 예측 [P₁, P₂, P₃, P₄]를 새로운 특성으로 사용</p>
+<p>→ Meta Model이 이를 학습하여 최종 예측 수행</p>
+</div>
+<div class="success-box">
+<h4>Stacking의 장점</h4>
+<ul>
+<li><strong>높은 성능:</strong> 모델들의 예측을 학습하여 최적 조합 발견</li>
+<li><strong>모델 다양성 활용:</strong> 각 모델의 강점을 자동으로 학습</li>
+<li><strong>유연성:</strong> 다양한 알고리즘 조합 가능</li>
+</ul>
+</div>
+</div>
+
+
+<div class="slide">
+<h2>Stacking 예시: 3개 모델의 확률 예측</h2>
+
+<div class="box">
+<h3>Stacking의 2단계 프로세스</h3>
+<p><strong>Level 0:</strong> Base Models이 Out-of-Fold 예측 생성</p>
+<p><strong>Level 1:</strong> Meta Model이 이 예측들을 학습</p>
+</div>
+
+<div class="example-box">
+<h4>구체적 예시: 고양이 vs 강아지 분류 (3개 샘플)</h4>
+</div>
+
+<h3 style="color: #667eea;">Level 0: Base Models의 Out-of-Fold 예측</h3>
+
+<table>
+<tr>
+<th>샘플</th>
+<th>Random Forest<br>고양이 확률</th>
+<th>SVM<br>고양이 확률</th>
+<th>KNN<br>고양이 확률</th>
+<th>실제 정답</th>
+</tr>
+<tr>
+<td style="font-weight: bold;">샘플 1</td>
+<td style="background: #d4edda;">0.85</td>
+<td style="background: #d4edda;">0.75</td>
+<td style="background: #d4edda;">0.90</td>
+<td style="font-weight: bold; color: #28a745;">고양이</td>
+</tr>
+<tr>
+<td style="font-weight: bold;">샘플 2</td>
+<td style="background: #f8d7da;">0.30</td>
+<td style="background: #f8d7da;">0.25</td>
+<td style="background: #f8d7da;">0.40</td>
+<td style="font-weight: bold; color: #dc3545;">강아지</td>
+</tr>
+<tr>
+<td style="font-weight: bold;">샘플 3</td>
+<td style="background: #d4edda;">0.70</td>
+<td style="background: #fff3cd;">0.55</td>
+<td style="background: #d4edda;">0.80</td>
+<td style="font-weight: bold; color: #28a745;">고양이</td>
+</tr>
+</table>
+
+<div style="text-align: center; margin: 30px 0; font-size: 24px; font-weight: bold; color: #667eea;">
+↓ 이 예측들을 Meta Model의 입력으로 사용 ↓
+</div>
+
+<h3 style="color: #667eea;">Level 1: Meta Model 학습용 데이터</h3>
+
+<table>
+<tr>
+<th>샘플</th>
+<th colspan="3" style="background: #e7f3ff;">새로운 특성 (Base Models의 예측)</th>
+<th>타겟<br>(원본 레이블)</th>
+</tr>
+<tr>
+<td></td>
+<td style="background: #e7f3ff;"><strong>Feature 1<br>(RF 예측)</strong></td>
+<td style="background: #e7f3ff;"><strong>Feature 2<br>(SVM 예측)</strong></td>
+<td style="background: #e7f3ff;"><strong>Feature 3<br>(KNN 예측)</strong></td>
+<td></td>
+</tr>
+<tr>
+<td style="font-weight: bold;">샘플 1</td>
+<td style="background: #e7f3ff;">0.85</td>
+<td style="background: #e7f3ff;">0.75</td>
+<td style="background: #e7f3ff;">0.90</td>
+<td style="font-weight: bold; color: #28a745;">고양이 (1)</td>
+</tr>
+<tr>
+<td style="font-weight: bold;">샘플 2</td>
+<td style="background: #e7f3ff;">0.30</td>
+<td style="background: #e7f3ff;">0.25</td>
+<td style="background: #e7f3ff;">0.40</td>
+<td style="font-weight: bold; color: #dc3545;">강아지 (0)</td>
+</tr>
+<tr>
+<td style="font-weight: bold;">샘플 3</td>
+<td style="background: #e7f3ff;">0.70</td>
+<td style="background: #e7f3ff;">0.55</td>
+<td style="background: #e7f3ff;">0.80</td>
+<td style="font-weight: bold; color: #28a745;">고양이 (1)</td>
+</tr>
+</table>
+
+<div style="text-align: center; margin: 30px 0; font-size: 24px; font-weight: bold; color: #667eea;">
+↓ Meta Model이 이 데이터로 학습 ↓
+</div>
+
+<div class="success-box">
+<h4>Meta Model (예: Logistic Regression)이 학습하는 것</h4>
+<p><strong>질문:</strong> 세 모델의 예측 [0.85, 0.75, 0.90]이 주어졌을 때, 최종 답은?</p>
+<p><strong>학습 결과 예시:</strong></p>
+<pre style="background: white; color: #333; font-size: 16px;">
+최종 예측 = 0.3 × RF예측 + 0.5 × SVM예측 + 0.2 × KNN예측 + 상수
+
+예를 들어:
+샘플 1: 0.3×0.85 + 0.5×0.75 + 0.2×0.90 = 0.81 → 고양이 ✓
+샘플 2: 0.3×0.30 + 0.5×0.25 + 0.2×0.40 = 0.30 → 강아지 ✓
+샘플 3: 0.3×0.70 + 0.5×0.55 + 0.2×0.80 = 0.64 → 고양이 ✓
+</pre>
+<p>Meta Model은 <strong>각 Base Model을 얼마나 신뢰할지</strong>를 자동으로 학습합니다!</p>
+</div>
+
+<div class="warning-box">
+<h4>Voting과의 차이</h4>
+<p><strong>Soft Voting:</strong> 단순 평균</p>
+<pre style="background: white; color: #333;">샘플 1: (0.85 + 0.75 + 0.90) / 3 = 0.833</pre>
+<p><strong>Stacking:</strong> 학습된 가중치</p>
+<pre style="background: white; color: #333;">샘플 1: 0.3×0.85 + 0.5×0.75 + 0.2×0.90 = 0.81</pre>
+<p>Stacking은 데이터를 기반으로 <strong>최적의 가중치를 자동으로 찾습니다!</strong></p>
+</div>
+</div>
+
+
+
+
+<div class="slide">
+<h2>Stacking vs Voting: 단계별 비교</h2>
+
+<table style="width: 100%; margin: 30px 0;">
+<tr>
+<th style="width: 50%; background: #ffc107;">Soft Voting</th>
+<th style="width: 50%; background: #28a745;">Stacking</th>
+</tr>
+<tr>
+<td style="vertical-align: top; padding: 20px;">
+<h4 style="color: #f57c00;">단계 1: Base Models 예측</h4>
+<table style="font-size: 14px; margin: 10px 0;">
+<tr><th>모델</th><th>샘플 1</th></tr>
+<tr><td>RF</td><td>0.85</td></tr>
+<tr><td>SVM</td><td>0.75</td></tr>
+<tr><td>KNN</td><td>0.90</td></tr>
+</table>
+
+<h4 style="color: #f57c00; margin-top: 20px;">단계 2: 단순 평균</h4>
+<div class="formula" style="font-size: 16px;">
+최종 = (0.85 + 0.75 + 0.90) / 3<br>
+= 0.833
+</div>
+
+<div style="margin-top: 15px; padding: 10px; background: white; border-radius: 5px;">
+<strong>특징:</strong>
+<ul style="margin: 5px 0 0 20px; font-size: 14px;">
+<li>모든 모델 동등하게 취급</li>
+<li>고정된 규칙 (평균)</li>
+<li>간단하고 빠름</li>
+</ul>
+</div>
+</td>
+
+<td style="vertical-align: top; padding: 20px;">
+<h4 style="color: #28a745;">단계 1: Base Models 예측</h4>
+<table style="font-size: 14px; margin: 10px 0;">
+<tr><th>모델</th><th>샘플 1</th></tr>
+<tr><td>RF</td><td>0.85</td></tr>
+<tr><td>SVM</td><td>0.75</td></tr>
+<tr><td>KNN</td><td>0.90</td></tr>
+</table>
+
+<h4 style="color: #28a745; margin-top: 20px;">단계 2: Meta Model 학습</h4>
+<div class="formula" style="font-size: 16px;">
+최종 = 0.3×RF + 0.5×SVM + 0.2×KNN<br>
+= 0.3×0.85 + 0.5×0.75 + 0.2×0.90<br>
+= 0.81
+</div>
+
+<div style="margin-top: 15px; padding: 10px; background: white; border-radius: 5px;">
+<strong>특징:</strong>
+<ul style="margin: 5px 0 0 20px; font-size: 14px;">
+<li>각 모델 신뢰도 학습</li>
+<li>학습된 규칙 (가중치)</li>
+<li>더 복잡, 더 정확</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+
+<div class="example-box">
+<h4>핵심 차이점</h4>
+<table>
+<tr>
+<th>구분</th>
+<th>Soft Voting</th>
+<th>Stacking</th>
+</tr>
+<tr>
+<td><strong>결합 방식</strong></td>
+<td>단순 평균 (1/3, 1/3, 1/3)</td>
+<td>학습된 가중치 (0.3, 0.5, 0.2)</td>
+</tr>
+<tr>
+<td><strong>가중치 결정</strong></td>
+<td>사람이 수동 설정 또는 균등</td>
+<td>데이터로부터 자동 학습</td>
+</tr>
+<tr>
+<td><strong>복잡도</strong></td>
+<td>낮음 (1단계)</td>
+<td>높음 (2단계)</td>
+</tr>
+<tr>
+<td><strong>과적합 위험</strong></td>
+<td>낮음</td>
+<td>중간 (Out-of-Fold 필요)</td>
+</tr>
+<tr>
+<td><strong>성능</strong></td>
+<td>좋음</td>
+<td>더 좋음</td>
+</tr>
+</table>
+</div>
+
+<div class="success-box">
+<h4>언제 무엇을 사용할까?</h4>
+<p><strong>Voting 사용:</strong></p>
+<ul>
+<li>빠르고 간단한 앙상블이 필요할 때</li>
+<li>과적합이 걱정될 때</li>
+<li>Base Models의 성능이 비슷할 때</li>
+</ul>
+<p><strong>Stacking 사용:</strong></p>
+<ul>
+<li>최고 성능이 필요할 때</li>
+<li>충분한 학습 데이터가 있을 때</li>
+<li>Base Models의 성능이 다양할 때</li>
+<li>모델들의 강점/약점이 상호보완적일 때</li>
+</ul>
+</div>
+
+<div class="warning-box">
+<h4>비유</h4>
+<p><strong>Voting:</strong> 세 명의 전문가가 각각 점수를 주고, 그 <strong>평균</strong>을 최종 점수로 사용</p>
+<p><strong>Stacking:</strong> 세 명의 전문가가 각각 점수를 주고, 경험 많은 <strong>심판</strong>이 "A 전문가는 70% 신뢰, B는 50%, C는 30%"와 같이 <strong>학습된 가중치</strong>로 최종 점수 결정</p>
+</div>
+</div>
+
+
+
+<div class="slide">
+<h2>Out-of-Fold (OOF) 예측이란?</h2>
+
+<div class="box">
+<h3>OOF의 필요성</h3>
+<p><strong>문제 상황:</strong> Stacking에서 Base Models의 예측을 Meta Model이 학습해야 하는데, 같은 데이터로 학습하고 예측하면?</p>
+<p style="color: #dc3545; font-weight: bold;">→ 과적합된 예측을 Meta Model이 학습하게 됩니다!</p>
+</div>
+
+<div class="danger-box">
+<h4>잘못된 방법 (OOF 없이)</h4>
+<p><strong>Step 1:</strong> Base Model을 전체 데이터(1000개)로 학습</p>
+<p><strong>Step 2:</strong> 같은 데이터(1000개)로 예측 생성</p>
+<p><strong>문제:</strong> Base Model이 이미 "본" 데이터를 예측 → 비현실적으로 높은 정확도</p>
+<pre style="background: white; color: #dc3545;">예: 훈련 정확도 99%, 실제 새 데이터 정확도 70%
+→ Meta Model이 과적합된 예측을 학습하게 됨!</pre>
+</div>
+
+<div class="success-box">
+<h4>올바른 방법 (OOF 사용)</h4>
+<p><strong>핵심 아이디어:</strong> 각 샘플을 예측할 때, 그 샘플을 <strong>"본 적 없는"</strong> 모델을 사용</p>
+<p><strong>방법:</strong> K-Fold Cross Validation 활용</p>
+</div>
+
+<div class="example-box">
+<h4>구체적 예시: 10개 샘플, 5-Fold로 OOF 예측 생성</h4>
+
+<table style="font-size: 15px;">
+<tr>
+<th style="width: 15%;">Fold</th>
+<th style="width: 35%;">학습 데이터</th>
+<th style="width: 25%;">검증 데이터<br>(예측 대상)</th>
+<th style="width: 25%;">생성된 예측</th>
+</tr>
+<tr style="background: #e7f3ff;">
+<td><strong>Fold 1</strong></td>
+<td>샘플 [3,4,5,6,7,8,9,10]<br>(8개)</td>
+<td>샘플 [1,2]<br>(2개)</td>
+<td><strong>P[1], P[2]</strong></td>
+</tr>
+<tr style="background: #e7f3ff;">
+<td><strong>Fold 2</strong></td>
+<td>샘플 [1,2,5,6,7,8,9,10]<br>(8개)</td>
+<td>샘플 [3,4]<br>(2개)</td>
+<td><strong>P[3], P[4]</strong></td>
+</tr>
+<tr style="background: #e7f3ff;">
+<td><strong>Fold 3</strong></td>
+<td>샘플 [1,2,3,4,7,8,9,10]<br>(8개)</td>
+<td>샘플 [5,6]<br>(2개)</td>
+<td><strong>P[5], P[6]</strong></td>
+</tr>
+<tr style="background: #e7f3ff;">
+<td><strong>Fold 4</strong></td>
+<td>샘플 [1,2,3,4,5,6,9,10]<br>(8개)</td>
+<td>샘플 [7,8]<br>(2개)</td>
+<td><strong>P[7], P[8]</strong></td>
+</tr>
+<tr style="background: #e7f3ff;">
+<td><strong>Fold 5</strong></td>
+<td>샘플 [1,2,3,4,5,6,7,8]<br>(8개)</td>
+<td>샘플 [9,10]<br>(2개)</td>
+<td><strong>P[9], P[10]</strong></td>
+</tr>
+</table>
+
+<div class="box" style="margin-top: 20px;">
+<h4>결과</h4>
+<p>모든 10개 샘플에 대한 예측 생성: <strong>[P[1], P[2], P[3], ..., P[10]]</strong></p>
+<p style="color: #28a745; font-weight: bold;">✓ 각 샘플은 "자신을 학습하지 않은" 모델로부터 예측받음!</p>
+</div>
+</div>
+
+<h3>단계별 시각화</h3>
+
+<div class="visualization-container" style="min-height: 300px;">
+<svg width="700" height="280" xmlns="http://www.w3.org/2000/svg">
+<!-- 전체 데이터 -->
+<text x="350" y="25" font-size="16" font-weight="bold" text-anchor="middle" fill="#333">전체 데이터 10개</text>
+<rect x="50" y="40" width="600" height="40" fill="#e3f2fd" stroke="#2196F3" stroke-width="2" rx="5"/>
+<text x="350" y="65" font-size="14" text-anchor="middle" fill="#2196F3">[1] [2] [3] [4] [5] [6] [7] [8] [9] [10]</text>
+
+<!-- Fold 1 -->
+<text x="25" y="120" font-size="14" font-weight="bold" fill="#667eea">Fold 1</text>
+<rect x="50" y="100" width="480" height="30" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="3"/>
+<text x="290" y="120" font-size="12" text-anchor="middle" fill="#28a745">학습: [3,4,5,6,7,8,9,10]</text>
+<rect x="550" y="100" width="100" height="30" fill="#fff3cd" stroke="#ffc107" stroke-width="2" rx="3"/>
+<text x="600" y="120" font-size="12" text-anchor="middle" fill="#f57c00">예측: [1,2]</text>
+
+<!-- Fold 2 -->
+<text x="25" y="160" font-size="14" font-weight="bold" fill="#667eea">Fold 2</text>
+<rect x="50" y="140" width="100" height="30" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="3"/>
+<text x="100" y="160" font-size="12" text-anchor="middle" fill="#28a745">[1,2]</text>
+<rect x="170" y="140" width="100" height="30" fill="#fff3cd" stroke="#ffc107" stroke-width="2" rx="3"/>
+<text x="220" y="160" font-size="12" text-anchor="middle" fill="#f57c00">예측: [3,4]</text>
+<rect x="290" y="140" width="360" height="30" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="3"/>
+<text x="470" y="160" font-size="12" text-anchor="middle" fill="#28a745">학습: [5,6,7,8,9,10]</text>
+
+<!-- 화살표 -->
+<text x="350" y="195" font-size="16" font-weight="bold" text-anchor="middle" fill="#667eea">⋮</text>
+
+<!-- 최종 결과 -->
+<text x="350" y="225" font-size="16" font-weight="bold" text-anchor="middle" fill="#333">OOF 예측 결과</text>
+<rect x="50" y="235" width="600" height="40" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+<text x="350" y="260" font-size="14" text-anchor="middle" fill="#28a745">모든 샘플의 "본 적 없는" 예측: [P₁, P₂, P₃, ..., P₁₀]</text>
+</svg>
+</div>
+
+<div class="success-box">
+<h4>OOF의 장점</h4>
+<ul>
+<li><strong>일반화된 예측:</strong> 각 샘플의 예측이 과적합되지 않음</li>
+<li><strong>현실적인 성능:</strong> 새로운 데이터에 대한 실제 성능을 반영</li>
+<li><strong>안전한 Stacking:</strong> Meta Model이 건강한 예측을 학습</li>
+<li><strong>전체 데이터 활용:</strong> 모든 샘플에 대한 예측을 얻을 수 있음</li>
+</ul>
+</div>
+</div>
+
+<div class="slide">
+<h2>OOF 예측 - 실제 숫자 예시</h2>
+
+<div class="box">
+<h3>상황: Breast Cancer 데이터 (5개 샘플로 간소화)</h3>
+<p>Random Forest 모델로 3-Fold OOF 예측 생성</p>
+</div>
+
+<h4>원본 데이터</h4>
+<table style="font-size: 15px;">
+<tr>
+<th>샘플 ID</th>
+<th>특성들 (간략화)</th>
+<th>실제 레이블</th>
+</tr>
+<tr><td>1</td><td>[5.2, 3.1, 4.5, ...]</td><td>악성</td></tr>
+<tr><td>2</td><td>[6.1, 2.8, 5.2, ...]</td><td>양성</td></tr>
+<tr><td>3</td><td>[4.8, 3.4, 3.9, ...]</td><td>악성</td></tr>
+<tr><td>4</td><td>[5.9, 3.0, 4.8, ...]</td><td>양성</td></tr>
+<tr><td>5</td><td>[5.5, 2.9, 4.2, ...]</td><td>악성</td></tr>
+</table>
+
+<h4>3-Fold OOF 예측 과정</h4>
+
+<div class="example-box">
+<h5>Fold 1</h5>
+<p><strong>학습:</strong> 샘플 [3, 4, 5]로 Random Forest 학습</p>
+<p><strong>예측:</strong> 샘플 [1, 2] 예측</p>
+<pre style="background: white; color: #333;">샘플 1 예측: 악성 확률 0.92 → OOF[1] = 0.92
+샘플 2 예측: 악성 확률 0.15 → OOF[2] = 0.15</pre>
+</div>
+
+<div class="example-box">
+<h5>Fold 2</h5>
+<p><strong>학습:</strong> 샘플 [1, 2, 5]로 Random Forest 학습</p>
+<p><strong>예측:</strong> 샘플 [3, 4] 예측</p>
+<pre style="background: white; color: #333;">샘플 3 예측: 악성 확률 0.88 → OOF[3] = 0.88
+샘플 4 예측: 악성 확률 0.23 → OOF[4] = 0.23</pre>
+</div>
+
+<div class="example-box">
+<h5>Fold 3</h5>
+<p><strong>학습:</strong> 샘플 [1, 2, 3, 4]로 Random Forest 학습</p>
+<p><strong>예측:</strong> 샘플 [5] 예측</p>
+<pre style="background: white; color: #333;">샘플 5 예측: 악성 확률 0.85 → OOF[5] = 0.85</pre>
+</div>
+
+<h4>최종 OOF 예측</h4>
+<table style="font-size: 15px;">
+<tr>
+<th>샘플 ID</th>
+<th>OOF 예측<br>(악성 확률)</th>
+<th>실제 레이블</th>
+<th>학습에 사용된 Fold</th>
+</tr>
+<tr style="background: #d4edda;"><td>1</td><td>0.92</td><td>악성</td><td>Fold 1 (샘플 3,4,5로 학습)</td></tr>
+<tr style="background: #d4edda;"><td>2</td><td>0.15</td><td>양성</td><td>Fold 1 (샘플 3,4,5로 학습)</td></tr>
+<tr style="background: #d4edda;"><td>3</td><td>0.88</td><td>악성</td><td>Fold 2 (샘플 1,2,5로 학습)</td></tr>
+<tr style="background: #d4edda;"><td>4</td><td>0.23</td><td>양성</td><td>Fold 2 (샘플 1,2,5로 학습)</td></tr>
+<tr style="background: #d4edda;"><td>5</td><td>0.85</td><td>악성</td><td>Fold 3 (샘플 1,2,3,4로 학습)</td></tr>
+</table>
+
+<div class="success-box">
+<h4>이제 Meta Model 학습!</h4>
+<p>이 OOF 예측 [0.92, 0.15, 0.88, 0.23, 0.85]를 <strong>새로운 특성</strong>으로 사용하여 Meta Model을 학습합니다.</p>
+<p style="margin-top: 10px;"><strong>중요:</strong> 각 예측은 해당 샘플을 "본 적 없는" 모델이 생성했으므로, 과적합되지 않은 건강한 예측입니다!</p>
+</div>
+
+<div class="warning-box">
+<h4>잘못된 방법과 비교</h4>
+<table>
+<tr>
+<th style="width: 50%;">❌ 잘못된 방법 (OOF 없이)</th>
+<th style="width: 50%;">✓ 올바른 방법 (OOF)</th>
+</tr>
+<tr>
+<td style="vertical-align: top;">
+전체 5개로 학습 → 같은 5개 예측<br>
+→ 훈련 정확도: 100%<br>
+→ 과적합된 예측<br>
+→ Meta Model이 잘못 학습
+</td>
+<td style="vertical-align: top;">
+3-Fold로 나누어 학습<br>
+→ 각 샘플은 "본 적 없는" 모델이 예측<br>
+→ 현실적인 예측<br>
+→ Meta Model이 올바르게 학습
+</td>
+</tr>
+</table>
+</div>
+</div>
+
+
+<div class="slide">
+<h2>Stacking의 작동 원리 상세</h2>
+<div class="box">
+<h3>1단계: Base Models 학습 (Level 0)</h3>
+<p><strong>목표:</strong> 다양한 알고리즘으로 훈련 데이터를 학습</p>
+<ul>
+<li>서로 다른 여러 모델 (Decision Tree, SVM, KNN 등)을 훈련</li>
+<li>각 모델은 독립적으로 학습</li>
+<li><strong>중요:</strong> Out-of-Fold 예측 사용 (과적합 방지)</li>
+</ul>
+</div>
+<div class="example-box">
+<h4>Out-of-Fold 예측이란?</h4>
+<p>K-Fold Cross Validation을 사용하여 각 샘플에 대해 "본 적 없는" 데이터로 예측합니다.</p>
+<ul>
+<li>데이터를 K개로 분할 (예: 5-Fold)</li>
+<li>각 Fold마다 해당 Fold를 제외한 나머지로 학습</li>
+<li>학습하지 않은 Fold에 대해 예측</li>
+<li>모든 샘플이 정확히 한 번씩 예측됨</li>
+</ul>
+</div>
+<div class="box">
+<h3>2단계: Meta Model 학습 (Level 1)</h3>
+<p><strong>목표:</strong> Base Models의 예측을 학습하여 최종 예측</p>
+<ul>
+<li><strong>새로운 특성:</strong> Base Models의 예측값들</li>
+<li><strong>새로운 타겟:</strong> 원본 레이블</li>
+<li>Meta Model은 "어떤 모델을 얼마나 신뢰할지" 학습</li>
+<li>주로 간단한 모델 사용 (Logistic Regression, Linear Regression 등)</li>
+</ul>
+</div>
+<div class="danger-box">
+<h4>과적합 방지 - Out-of-Fold가 필수!</h4>
+<p>만약 Base Models이 훈련한 데이터를 그대로 예측하면, Meta Model이 Base Models의 과적합까지 학습하게 됩니다. Out-of-Fold 방식으로 "본 적 없는" 예측을 생성해야 합니다.</p>
+</div>
+</div>
+
+
+<div class="slide">
+<h2>Stacking - sklearn 기본 구현</h2>
+<div class="box">
+<h3>StackingClassifier 사용법</h3>
+<p>sklearn의 <code>StackingClassifier</code>는 자동으로 Out-of-Fold 예측을 생성하고 Meta Model을 학습합니다.</p>
+</div>
+<pre><code>from sklearn.ensemble import StackingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split, cross_val_score
+
+# 데이터 준비
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Base Models (Level 0)
+base_models = [
+    ('dt', DecisionTreeClassifier(random_state=42)),
+    ('rf', RandomForestClassifier(n_estimators=50, random_state=42)),
+    ('svc', SVC(probability=True, random_state=42))
+]
+
+# Meta Model (Level 1)
+meta_model = LogisticRegression(max_iter=1000, random_state=42)
+
+# Stacking Classifier
+stacking_clf = StackingClassifier(
+    estimators=base_models,
+    final_estimator=meta_model,
+    cv=5  # 5-Fold for Out-of-Fold predictions
+)
+
+# 학습
+stacking_clf.fit(X_train, y_train)
+
+# 평가
+train_score = stacking_clf.score(X_train, y_train)
+test_score = stacking_clf.score(X_test, y_test)
+
+print(f"훈련 정확도: {train_score:.4f}")
+print(f"테스트 정확도: {test_score:.4f}")
+
+# Cross Validation
+cv_scores = cross_val_score(stacking_clf, X_train, y_train, cv=5)
+print(f"CV 평균: {cv_scores.mean():.4f} (+/- {cv_scores.std():.4f})")</code></pre>
+<div class="example-box">
+<h4>주요 파라미터</h4>
+<ul>
+<li><code>estimators</code>: Base Models 리스트</li>
+<li><code>final_estimator</code>: Meta Model (기본: LogisticRegression)</li>
+<li><code>cv</code>: Out-of-Fold 예측을 위한 Fold 수 (기본: 5)</li>
+<li><code>stack_method</code>: Base Models의 출력 방식</li>
+<li><code>passthrough</code>: 원본 특성도 Meta Model에 전달할지 여부</li>
+</ul>
+</div>
+</div>
+
+<div class="slide">
+<h2>실습: 개별 모델 vs Stacking 성능 비교</h2>
+<pre><code>import numpy as np
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import (StackingClassifier, RandomForestClassifier, 
+                               GradientBoostingClassifier)
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+
+X, y = load_breast_cancer(return_X_y=True)
+
+# Base Models
+base_models = [
+    ('dt', DecisionTreeClassifier(max_depth=5, random_state=42)),
+    ('rf', RandomForestClassifier(n_estimators=50, random_state=42)),
+    ('svc', SVC(probability=True, random_state=42)),
+    ('knn', KNeighborsClassifier(n_neighbors=5)),
+    ('gb', GradientBoostingClassifier(n_estimators=50, random_state=42))
+]
+
+# 개별 모델 성능
+print("개별 Base Models 성능 (5-Fold Cross Validation)")
+print("=" * 60)
+for name, model in base_models:
+    scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')
+    print(f"{name.upper():10s}: {scores.mean():.4f} (+/- {scores.std():.4f})")
+
+# Stacking with different Meta Models
+meta_models = {
+    'Logistic Regression': LogisticRegression(max_iter=1000, random_state=42),
+    'Random Forest': RandomForestClassifier(n_estimators=50, random_state=42),
+    'Gradient Boosting': GradientBoostingClassifier(n_estimators=50, random_state=42)
+}
+
+print("\nStacking Ensemble 성능 (다양한 Meta Models)")
+print("=" * 60)
+for meta_name, meta_model in meta_models.items():
+    stacking_clf = StackingClassifier(
+        estimators=base_models,
+        final_estimator=meta_model,
+        cv=5
+    )
+    scores = cross_val_score(stacking_clf, X, y, cv=5, scoring='accuracy')
+    print(f"{meta_name:25s}: {scores.mean():.4f} (+/- {scores.std():.4f})")
+
+# Stacking with passthrough
+stacking_passthrough = StackingClassifier(
+    estimators=base_models,
+    final_estimator=LogisticRegression(max_iter=1000, random_state=42),
+    cv=5,
+    passthrough=True
+)
+scores = cross_val_score(stacking_passthrough, X, y, cv=5, scoring='accuracy')
+print(f"\nPassthrough=True         : {scores.mean():.4f} (+/- {scores.std():.4f})")</code></pre>
+<div class="success-box">
+<h4>예상 출력</h4>
+<pre style="background:white;color:#333">개별 Base Models 성능 (5-Fold Cross Validation)
+============================================================
+DT        : 0.9332 (+/- 0.0187)
+RF        : 0.9596 (+/- 0.0145)
+SVC       : 0.9614 (+/- 0.0145)
+KNN       : 0.9473 (+/- 0.0167)
+GB        : 0.9596 (+/- 0.0131)
+
+Stacking Ensemble 성능 (다양한 Meta Models)
+============================================================
+Logistic Regression      : 0.9719 (+/- 0.0109)
+Random Forest            : 0.9719 (+/- 0.0098)
+Gradient Boosting        : 0.9684 (+/- 0.0120)
+
+Passthrough=True         : 0.9737 (+/- 0.0103)</pre>
+</div>
+</div>
+
+<div class="slide">
+<h2>Stacking 하이퍼파라미터 튜닝</h2>
+<div class="box">
+<h3>튜닝 대상</h3>
+<ul>
+<li><strong>Base Models:</strong> 각 모델의 하이퍼파라미터</li>
+<li><strong>Meta Model:</strong> 메타 모델의 하이퍼파라미터</li>
+<li><strong>CV 설정:</strong> Fold 수</li>
+<li><strong>stack_method:</strong> Base Model 출력 방식</li>
+<li><strong>passthrough:</strong> 원본 특성 포함 여부</li>
+</ul>
+</div>
+<pre><code>from sklearn.model_selection import GridSearchCV
+
+# Base Models
+base_models = [
+    ('dt', DecisionTreeClassifier(random_state=42)),
+    ('rf', RandomForestClassifier(random_state=42)),
+    ('svc', SVC(probability=True, random_state=42))
+]
+
+# Stacking Classifier
+stacking_clf = StackingClassifier(
+    estimators=base_models,
+    final_estimator=LogisticRegression(max_iter=1000, random_state=42)
+)
+
+# 파라미터 그리드
+param_grid = {
+    'dt__max_depth': [3, 5, 7],
+    'rf__n_estimators': [50, 100],
+    'rf__max_depth': [5, 10],
+    'svc__C': [0.1, 1, 10],
+    'cv': [3, 5],
+    'passthrough': [False, True],
+    'final_estimator__C': [0.1, 1, 10]
+}
+
+# Grid Search
+grid_search = GridSearchCV(
+    stacking_clf,
+    param_grid,
+    cv=3,
+    scoring='accuracy',
+    n_jobs=-1
+)
+
+grid_search.fit(X_train, y_train)
+print("최적 파라미터:", grid_search.best_params_)
+print(f"최적 CV 점수: {grid_search.best_score_:.4f}")
+print(f"테스트 점수: {grid_search.score(X_test, y_test):.4f}")</code></pre>
+<div class="warning-box">
+<h4>주의사항</h4>
+<ul>
+<li>Stacking의 GridSearch는 매우 오래 걸릴 수 있음</li>
+<li>Base Models의 수와 파라미터를 적절히 제한</li>
+<li>RandomizedSearchCV 사용도 고려</li>
+</ul>
+</div>
+</div>
+
+<div class="slide">
+<h2>Stacking - Passthrough 옵션</h2>
+<div class="box">
+<h3>Passthrough란?</h3>
+<p><code>passthrough=True</code>로 설정하면 원본 특성도 Meta Model에 전달됩니다.</p>
+</div>
+<div class="example-box">
+<h4>Passthrough=False (기본)</h4>
+<p><strong>Meta Model 입력:</strong> [P₁, P₂, P₃]</p>
+<p>→ Base Models의 예측만 사용</p>
+</div>
+<div class="example-box">
+<h4>Passthrough=True</h4>
+<p><strong>Meta Model 입력:</strong> [P₁, P₂, P₃, x₁, x₂, ..., xₙ]</p>
+<p>→ Base Models의 예측 + 원본 특성</p>
+</div>
+<h4>비교 실습</h4>
+<pre><code># Passthrough=False
+stacking_no_pass = StackingClassifier(
+    estimators=base_models,
+    final_estimator=LogisticRegression(max_iter=1000),
+    cv=5,
+    passthrough=False
+)
+scores_no_pass = cross_val_score(stacking_no_pass, X, y, cv=5)
+
+# Passthrough=True
+stacking_with_pass = StackingClassifier(
+    estimators=base_models,
+    final_estimator=LogisticRegression(max_iter=1000),
+    cv=5,
+    passthrough=True
+)
+scores_with_pass = cross_val_score(stacking_with_pass, X, y, cv=5)
+
+print(f"Passthrough=False: {scores_no_pass.mean():.4f}")
+print(f"Passthrough=True : {scores_with_pass.mean():.4f}")</code></pre>
+<div class="success-box">
+<h4>언제 Passthrough를 사용할까?</h4>
+<ul>
+<li><strong>사용:</strong> Meta Model이 원본 특성의 정보도 필요할 때</li>
+<li><strong>사용 안함:</strong> Base Models의 예측만으로 충분하다고 판단될 때</li>
+<li><strong>실험:</strong> 둘 다 시도해보고 성능 비교</li>
+</ul>
+</div>
+</div>
+
+<div class="slide">
+<h2>앙상블 방법 종합 비교</h2>
+<table>
+<tr><th>특성</th><th>Bagging</th><th>Boosting</th><th>Voting</th><th>Stacking</th></tr>
+<tr><td>학습 방식</td><td>병렬</td><td>순차</td><td>병렬</td><td>계층</td></tr>
+<tr><td>모델 종류</td><td>같음</td><td>같음</td><td>다름</td><td>다름</td></tr>
+<tr><td>주요 목적</td><td>분산 감소</td><td>편향 감소</td><td>안정성</td><td>성능 최대화</td></tr>
+<tr><td>복잡도</td><td>낮음</td><td>중간</td><td>낮음</td><td>높음</td></tr>
+<tr><td>학습 속도</td><td>빠름</td><td>느림</td><td>중간</td><td>느림</td></tr>
+<tr><td>과적합 위험</td><td>낮음</td><td>높음</td><td>낮음</td><td>중간</td></tr>
+<tr><td>해석 가능성</td><td>중간</td><td>중간</td><td>높음</td><td>낮음</td></tr>
+</table>
+<div class="box">
+<h3>선택 가이드</h3>
+<ul>
+<li><strong>Bagging (Random Forest):</strong> 안정적이고 빠른 성능, 큰 데이터셋</li>
+<li><strong>Boosting (XGBoost):</strong> 최고 성능 필요, Kaggle 경진대회</li>
+<li><strong>Voting:</strong> 간단한 앙상블, 다양한 모델 활용</li>
+<li><strong>Stacking:</strong> 최고 성능 추구, 충분한 데이터와 시간</li>
+</ul>
+</div>
+<div class="warning-box">
+<h4>실무 팁</h4>
+<p>대부분의 경우 <strong>Random Forest나 XGBoost</strong>만으로도 충분한 성능을 얻을 수 있습니다. Voting과 Stacking은 성능 개선이 절실한 경우에 시도하세요.</p>
+</div>
+</div>
+
+<div class="slide">
+<h2>앙상블 방법별 데이터 흐름 비교</h2>
+
+<div class="box">
+<h3>원본 데이터</h3>
+<p>예시: 1000개의 샘플을 가진 데이터셋</p>
+</div>
+
+<table style="font-size: 16px;">
+<tr>
+<th style="width: 15%;">앙상블 방법</th>
+<th style="width: 20%;">모델 종류</th>
+<th style="width: 30%;">각 모델의 학습 데이터</th>
+<th style="width: 35%;">특징</th>
+</tr>
+
+<tr style="background: #fff3cd;">
+<td rowspan="3" style="font-weight: bold; font-size: 18px; vertical-align: middle;">Bagging<br>(Random Forest)</td>
+<td>Decision Tree 1</td>
+<td><strong>샘플링 데이터셋 #1</strong><br>[2, 5, 5, 9, 11, 15, 15, ...] (1000개)<br>→ 중복 샘플링 (Bootstrap)</td>
+<td rowspan="3" style="vertical-align: middle;">
+• 같은 알고리즘<br>
+• 다른 데이터<br>
+• 부트스트랩 샘플링<br>
+• 약 63% 다른 샘플
+</td>
+</tr>
+<tr style="background: #fff3cd;">
+<td>Decision Tree 2</td>
+<td><strong>샘플링 데이터셋 #2</strong><br>[1, 3, 7, 7, 10, 12, 14, ...] (1000개)<br>→ 중복 샘플링 (Bootstrap)</td>
+</tr>
+<tr style="background: #fff3cd;">
+<td>Decision Tree 3</td>
+<td><strong>샘플링 데이터셋 #3</strong><br>[4, 6, 8, 8, 8, 13, 16, ...] (1000개)<br>→ 중복 샘플링 (Bootstrap)</td>
+</tr>
+
+<tr style="background: #e7f3ff;">
+<td rowspan="3" style="font-weight: bold; font-size: 18px; vertical-align: middle;">Voting</td>
+<td>Linear Regression</td>
+<td><strong>전체 데이터셋</strong><br>[1, 2, 3, 4, 5, ..., 1000] (1000개)<br>→ 모든 샘플 사용</td>
+<td rowspan="3" style="vertical-align: middle;">
+• 다른 알고리즘<br>
+• 같은 데이터<br>
+• 전체 데이터 사용<br>
+• 알고리즘 다양성
+</td>
+</tr>
+<tr style="background: #e7f3ff;">
+<td>K Nearest Neighbor</td>
+<td><strong>전체 데이터셋</strong><br>[1, 2, 3, 4, 5, ..., 1000] (1000개)<br>→ 모든 샘플 사용</td>
+</tr>
+<tr style="background: #e7f3ff;">
+<td>Support Vector Machine</td>
+<td><strong>전체 데이터셋</strong><br>[1, 2, 3, 4, 5, ..., 1000] (1000개)<br>→ 모든 샘플 사용</td>
+</tr>
+
+<tr style="background: #d4edda;">
+<td rowspan="3" style="font-weight: bold; font-size: 18px; vertical-align: middle;">Stacking<br>(Level 0)</td>
+<td>Random Forest</td>
+<td><strong>Out-of-Fold 학습</strong><br>Fold 1-4로 학습 → Fold 5 예측<br>Fold 1-3,5로 학습 → Fold 4 예측<br>...<br>→ 각 샘플마다 "본 적 없는" 예측</td>
+<td rowspan="3" style="vertical-align: middle;">
+• 다른 알고리즘<br>
+• 같은 데이터<br>
+• CV로 Out-of-Fold<br>
+• 과적합 방지
+</td>
+</tr>
+<tr style="background: #d4edda;">
+<td>SVM</td>
+<td><strong>Out-of-Fold 학습</strong><br>Fold 1-4로 학습 → Fold 5 예측<br>Fold 1-3,5로 학습 → Fold 4 예측<br>...<br>→ 각 샘플마다 "본 적 없는" 예측</td>
+</tr>
+<tr style="background: #d4edda;">
+<td>KNN</td>
+<td><strong>Out-of-Fold 학습</strong><br>Fold 1-4로 학습 → Fold 5 예측<br>Fold 1-3,5로 학습 → Fold 4 예측<br>...<br>→ 각 샘플마다 "본 적 없는" 예측</td>
+</tr>
+
+<tr style="background: #d4edda;">
+<td style="font-weight: bold; font-size: 18px;">Stacking<br>(Level 1)</td>
+<td>Logistic Regression<br>(Meta Model)</td>
+<td><strong>Base Models의 예측값</strong><br>새 특성: [P_RF, P_SVM, P_KNN]<br>원본 레이블: y<br>→ Base Models의 예측을 학습</td>
+<td>
+• Meta Model 학습<br>
+• 예측의 예측<br>
+• 최적 조합 학습
+</td>
+</tr>
+
+<tr style="background: #ffe0e0;">
+<td rowspan="3" style="font-weight: bold; font-size: 18px; vertical-align: middle;">Boosting<br>(AdaBoost)</td>
+<td>Decision Tree 1<br>(라운드 1)</td>
+<td><strong>전체 데이터 + 균등 가중치</strong><br>[1, 2, 3, ..., 1000]<br>가중치: [1, 1, 1, ..., 1]<br>→ 모든 샘플 동일하게</td>
+<td rowspan="3" style="vertical-align: middle;">
+• 같은 알고리즘<br>
+• 같은 데이터<br>
+• 순차 학습<br>
+• 오류 샘플 가중치↑
+</td>
+</tr>
+<tr style="background: #ffe0e0;">
+<td>Decision Tree 2<br>(라운드 2)</td>
+<td><strong>전체 데이터 + 조정된 가중치</strong><br>[1, 2, 3, ..., 1000]<br>가중치: [1, 3, 1, 5, 1, 1, 4, ...]<br>→ 오분류 샘플 가중치 증가</td>
+</tr>
+<tr style="background: #ffe0e0;">
+<td>Decision Tree 3<br>(라운드 3)</td>
+<td><strong>전체 데이터 + 재조정 가중치</strong><br>[1, 2, 3, ..., 1000]<br>가중치: [1, 1, 6, 2, 8, 1, 1, ...]<br>→ 계속 틀린 샘플 집중</td>
+</tr>
+</table>
+
+<div class="warning-box">
+<h4>핵심 요약</h4>
+<ul>
+<li><strong>Bagging:</strong> 같은 알고리즘 + 다른 데이터 (부트스트랩) → 분산 감소</li>
+<li><strong>Voting:</strong> 다른 알고리즘 + 같은 데이터 (전체) → 모델 다양성</li>
+<li><strong>Stacking:</strong> 다른 알고리즘 + Out-of-Fold → 메타 학습</li>
+<li><strong>Boosting:</strong> 같은 알고리즘 + 가중치 조정 → 편향 감소</li>
+</ul>
+</div>
+
+<div class="example-box">
+<h4>데이터 활용 관점에서의 차이</h4>
+<p><strong>데이터 다양화 방식:</strong></p>
+<ul>
+<li>Bagging: 물리적으로 다른 데이터셋 (샘플링)</li>
+<li>Voting: 데이터는 같지만 알고리즘이 다름</li>
+<li>Stacking: Out-of-Fold로 과적합 방지</li>
+<li>Boosting: 가중치로 논리적 다양화</li>
+</ul>
+</div>
+</div>
+
+
+<div class="slide">
+<h2>실습 과제</h2>
+<div class="box">
+<h4>과제 1: Voting vs Stacking 비교</h4>
+<p>California Housing 데이터로 회귀 문제에서 Voting과 Stacking 비교하기</p>
+<ul>
+<li>데이터: <code>sklearn.datasets.fetch_california_housing()</code></li>
+<li><code>VotingRegressor</code>와 <code>StackingRegressor</code> 사용</li>
+<li>Base Models: 최소 4개 이상의 회귀 모델</li>
+<li>Hard Voting, Soft Voting, Stacking 성능 비교</li>
+<li>여러가지 평가모델로 평가</li>
+</ul>
+</div>
+<div class="box">
+<h4>과제 2: Stacking 하이퍼파라미터 튜닝</h4>
+<p>Breast Cancer 데이터로 최적의 Stacking 모델 찾기</p>
+<ul>
+<li>Base Models 3-5개 선택</li>
+<li>각 Base Model의 주요 파라미터 튜닝</li>
+<li>Meta Model 선택 (Logistic Regression, Random Forest 등)</li>
+<li>passthrough 옵션 비교</li>
+<li>최종 모델의 Confusion Matrix, Classification Report 출력</li>
+</ul>
+</div>
+<div class="box">
+<h4>과제 3: 커스텀 Voting 가중치 최적화</h4>
+<p>GridSearchCV를 사용하여 최적의 Voting 가중치 찾기</p>
+<ul>
+<li>5개 이상의 다양한 분류 모델 사용</li>
+<li>가중치를 파라미터로 설정하여 GridSearch</li>
+<li>최적 가중치 조합 찾기</li>
+</ul>
+</div>
+</div>
+    
+
+<div class="slide">
+<h2>핵심 요약</h2>
+<div class="box">
+<h3>Voting Ensemble</h3>
+<ul>
+<li><strong>Hard Voting:</strong> 다수결 투표, 간단하고 직관적</li>
+<li><strong>Soft Voting:</strong> 확률 평균, 더 나은 성능</li>
+<li><strong>장점:</strong> 구현 간단, 과적합 감소, 안정적</li>
+<li><strong>단점:</strong> 고정된 결합 규칙</li>
+</ul>
+</div>
+<div class="box">
+<h3>Stacking Ensemble</h3>
+<ul>
+<li><strong>2단계 학습:</strong> Base Models → Meta Model</li>
+<li><strong>Out-of-Fold:</strong> 과적합 방지를 위한 필수 기법</li>
+<li><strong>장점:</strong> 최고 성능, 모델 다양성 최대 활용</li>
+<li><strong>단점:</strong> 복잡도 높음, 학습 시간 오래 걸림</li>
+</ul>
+</div>
+<div class="success-box">
+<h3>실무 적용 가이드</h3>
+<ul>
+<li><strong>빠른 베이스라인:</strong> Random Forest 또는 XGBoost</li>
+<li><strong>성능 개선 시도:</strong> Voting (Hard/Soft)</li>
+<li><strong>최고 성능 필요:</strong> Stacking (충분한 시간과 데이터)</li>
+<li><strong>항상 검증:</strong> Cross-validation으로 과적합 확인</li>
+</ul>
+</div>
+<div class="warning-box">
+<h3>주의사항</h3>
+<ul>
+<li>복잡한 앙상블이 항상 더 나은 것은 아님</li>
+<li>Feature Engineering이 더 효과적일 수 있음</li>
+<li>모델 해석 가능성과 성능의 트레이드오프 고려</li>
+<li>프로덕션 환경에서는 단순성도 중요한 요소</li>
+</ul>
+</div>
+</div>
+
+        </div>
+        <div class="controls">
+            <div class="navigation">
+                <button id="prevBtn">← 이전</button>
+                <span class="slide-counter">
+                    <span id="currentSlide">1</span> / <span id="totalSlides">26</span>
+                </span>
+                <button id="nextBtn">다음 →</button>
+            </div>
+            <div>
+                <input type="number" id="pageInput" min="1" placeholder="페이지">
+                <button id="goBtn">이동</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentSlideSpan = document.getElementById('currentSlide');
+        const totalSlidesSpan = document.getElementById('totalSlides');
+        const pageInput = document.getElementById('pageInput');
+        const goBtn = document.getElementById('goBtn');
+        
+        let currentSlide = 0;
+        
+        totalSlidesSpan.textContent = slides.length;
+        pageInput.max = slides.length;
+        
+        function showSlide(n) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            if (n >= slides.length) currentSlide = slides.length - 1;
+            else if (n < 0) currentSlide = 0;
+            else currentSlide = n;
+            slides[currentSlide].classList.add('active');
+            currentSlideSpan.textContent = currentSlide + 1;
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+            document.getElementById('slidesContainer').scrollTop = 0;
+        }
+        
+        prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+        nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+        goBtn.addEventListener('click', () => {
+            const page = parseInt(pageInput.value) - 1;
+            if (page >= 0 && page < slides.length) showSlide(page);
+        });
+        pageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') goBtn.click();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && !prevBtn.disabled) prevBtn.click();
+            else if (e.key === 'ArrowRight' && !nextBtn.disabled) nextBtn.click();
+            else if (e.key === 'Home') showSlide(0);
+            else if (e.key === 'End') showSlide(slides.length - 1);
+        });
+        showSlide(0);
+    </script>
+</body>
+</html>

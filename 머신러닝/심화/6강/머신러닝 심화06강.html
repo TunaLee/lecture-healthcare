@@ -1,0 +1,2428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>머신러닝 심화 06강 - 앙상블 ① Bagging과 Random Forest</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Nanum Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #slidesContainer {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        #slidesContainer::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        #slidesContainer::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #slidesContainer::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 5px;
+        }
+
+        #slidesContainer::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+
+        .slide {
+            padding: 60px;
+            min-height: auto;
+            display: none;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        h3 {
+            font-size: 28px;
+            color: #555;
+            margin-bottom: 20px;
+            margin-top: 30px;
+        }
+
+        h4 {
+            font-size: 22px;
+            color: #667eea;
+            margin-bottom: 15px;
+            margin-top: 20px;
+        }
+
+        h5 {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        p, li {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            font-size: 24px;
+            color: #888;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .box {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin: 20px 0;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .danger-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .example-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .formula {
+            background: #2c3e50;
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            font-size: 20px;
+            text-align: center;
+            margin: 25px 0;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+        }
+
+        .visualization-container {
+            background: #ffffff;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 25px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+
+        .code-section {
+            margin: 25px 0;
+        }
+
+        pre {
+            background: #2c3e50;
+            color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        code {
+            background: #2c3e50;
+            color: #ffd93d;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: #f8f9fa;
+            border-top: 2px solid #e0e0e0;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        button:hover:not(:disabled) {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .slide-counter {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .highlight {
+            background: #fffacd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .center-text {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        /* 인쇄용 스타일 */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+                overflow: visible;
+            }
+            
+            .container {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+            
+            #slidesContainer {
+                overflow: visible;
+                padding: 0;
+            }
+            
+            .controls {
+                display: none !important;
+            }
+            
+            .slide {
+                display: block !important;
+                page-break-after: always;
+                page-break-inside: avoid;
+                min-height: 100vh;
+                padding: 60px 40px;
+                margin: 0;
+                box-sizing: border-box;
+            }
+            
+            .slide:last-child {
+                page-break-after: avoid;
+            }
+            
+            table, pre, .box, .example-box, .success-box, .warning-box {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="slidesContainer">
+            
+            <!-- 슬라이드 1: 타이틀 -->
+            <div class="slide active">
+                <h1>머신러닝 심화 과정</h1>
+                <p class="subtitle">06강 - 앙상블 학습 ① Bagging과 Random Forest</p>
+                <div class="center-text" style="margin-top: 100px;">
+                    <p style="font-size: 32px; color: #667eea; font-weight: bold;">
+                        여러 모델의 지혜를 모아서
+                    </p>
+                    <p style="font-size: 24px; color: #666; margin-top: 40px;">
+                        Bootstrap Aggregating부터 Random Forest까지<br>
+                        Decision Tree에서 Forest로의 진화
+                    </p>
+                </div>
+            </div>
+
+            <!-- 슬라이드 2: 목차 -->
+            <div class="slide">
+                <h2>오늘 배울 내용</h2>
+                <div class="box">
+                    <h3>Part 1: Decision Tree의 한계와 앙상블</h3>
+                    <ul>
+                        <li>Decision Tree의 강점과 약점</li>
+                        <li>왜 앙상블이 필요한가?</li>
+                        <li>집단 지성의 수학적 원리</li>
+                    </ul>
+                </div>
+                <div class="box">
+                    <h3>Part 2: Bagging 완전 정복</h3>
+                    <ul>
+                        <li>Bootstrap이란 무엇인가?</li>
+                        <li>Aggregating의 마법</li>
+                        <li>왜 Bagging이 효과적인가?</li>
+                        <li>OOB (Out-of-Bag) Error</li>
+                    </ul>
+                </div>
+                <div class="box">
+                    <h3>Part 3: Random Forest 마스터</h3>
+                    <ul>
+                        <li>Tree에서 Forest로의 진화</li>
+                        <li>Feature Randomness의 도입</li>
+                        <li>하이퍼파라미터 최적화</li>
+                        <li>실전 활용법</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 슬라이드 3: Decision Tree의 특성 -->
+            <div class="slide">
+                <h2>Decision Tree: 강력하지만 불안정한 알고리즘</h2>
+                
+                <h3>Decision Tree의 강점</h3>
+                <div class="success-box">
+                    <ul>
+                        <li><strong>직관적 해석:</strong> if-then 규칙으로 의사결정 과정을 명확히 이해</li>
+                        <li><strong>비선형 패턴:</strong> 복잡한 비선형 관계를 포착 가능</li>
+                        <li><strong>전처리 불필요:</strong> 스케일링이나 정규화가 필요 없음</li>
+                        <li><strong>범주형 변수:</strong> 자연스럽게 처리 가능</li>
+                        <li><strong>빠른 예측:</strong> 학습 후 예측이 매우 빠름</li>
+                    </ul>
+                </div>
+
+                <h3>Decision Tree의 근본적 한계</h3>
+                <div class="danger-box">
+                    <ul>
+                        <li><strong>과적합 경향:</strong> 훈련 데이터의 노이즈까지 완벽히 학습</li>
+                        <li><strong>불안정성(High Variance):</strong> 데이터의 작은 변화에도 전혀 다른 트리 생성</li>
+                        <li><strong>축 평행 분할:</strong> 대각선 결정 경계를 효과적으로 표현 못함</li>
+                        <li><strong>단일 트리의 한계:</strong> 복잡한 패턴을 하나의 트리로 완벽히 포착하기 어려움</li>
+                    </ul>
+                </div>
+
+                <div class="warning-box">
+                    <h4>핵심 통찰</h4>
+                    <p>Decision Tree는 "강력하지만 불안정한" 알고리즘입니다. 
+                    이러한 특성이 오히려 앙상블 학습에 완벽한 기본 학습기(base learner)가 되는 이유입니다.
+                    여러 개의 불안정한 모델을 결합하면 안정적이고 강력한 모델이 됩니다!</p>
+                </div>
+            </div>
+
+            <!-- 슬라이드 4: 동기부여 -->
+            <div class="slide">
+                <h2>시작하기 전에: 실제 사례</h2>
+                <div class="example-box">
+                    <h3>의료 진단 시스템</h3>
+                    <p>한 환자의 X-ray 영상을 보고 폐렴 여부를 진단한다고 생각해보세요.</p>
+                    <ul>
+                        <li><strong>의사 1명:</strong> 정확도 85%</li>
+                        <li><strong>의사 10명의 협진:</strong> 정확도 95%</li>
+                    </ul>
+                    <p>→ 여러 전문가의 의견을 종합하면 더 정확한 진단이 가능합니다!</p>
+                </div>
+                
+                <div class="example-box">
+                    <h3>주식 가격 예측</h3>
+                    <p>내일의 주가를 예측하는 상황:</p>
+                    <ul>
+                        <li><strong>분석가 A:</strong> 기술적 분석만 사용</li>
+                        <li><strong>분석가 B:</strong> 펀더멘털 분석만 사용</li>
+                        <li><strong>분석가 C:</strong> 뉴스 감성 분석만 사용</li>
+                    </ul>
+                    <p>→ 세 분석가의 예측을 평균내면? <strong>각자보다 더 안정적인 예측!</strong></p>
+                </div>
+
+                <div class="warning-box">
+                    <p><strong>핵심 통찰:</strong> 서로 다른 관점을 가진 여러 예측을 결합하면, 
+                    개별 예측보다 더 정확하고 안정적인 결과를 얻을 수 있습니다.</p>
+                </div>
+            </div>
+
+            <!-- 슬라이드 5: 단일 모델의 문제점 -->
+            <div class="slide">
+                <h2>단일 모델의 한계</h2>
+                
+                <h3>1. 과적합(Overfitting) 문제</h3>
+                <div class="danger-box">
+                    <p><strong>상황:</strong> Decision Tree가 훈련 데이터를 "너무 잘" 학습했습니다.</p>
+                    <ul>
+                        <li>훈련 정확도: 99.8%</li>
+                        <li>테스트 정확도: 72.3%</li>
+                    </ul>
+                    <p>→ 훈련 데이터의 노이즈까지 외워버린 상태!</p>
+                </div>
+
+                <h3>2. 불안정성(Instability) 문제</h3>
+                <div class="danger-box">
+                    <p><strong>실험:</strong> 같은 데이터에서 1개 샘플만 제거하고 다시 학습</p>
+                    <ul>
+                        <li>원래 모델: "A 클래스"로 예측</li>
+                        <li>새 모델: "B 클래스"로 예측</li>
+                    </ul>
+                    <p>→ 데이터의 작은 변화에도 결과가 크게 달라집니다!</p>
+                </div>
+
+                <h3>3. 편향된 시각</h3>
+                <div class="danger-box">
+                    <p>하나의 알고리즘은 하나의 관점만 가집니다:</p>
+                    <ul>
+                        <li>Linear Model: 선형 관계만 포착</li>
+                        <li>Decision Tree: 축에 평행한 분할만 가능</li>
+                        <li>kNN: 지역적 패턴만 고려</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 슬라이드 7: Bagging 소개 -->
+            <div class="slide">
+                <h2>Bagging이란 무엇인가?</h2>
+                
+                <div class="box">
+                    <h3>Bagging = Bootstrap + Aggregating</h3>
+                    <p style="font-size: 20px;">Leo Breiman이 1996년에 제안한 앙상블 기법</p>
+                </div>
+
+                <h3>1. Bootstrap (부트스트랩)</h3>
+                <div class="example-box">
+                    <h4>이름의 유래: "Bootstrap"</h4>
+                    <p>자기 자신의 부츠끈(bootstrap)을 잡아당겨 자신을 들어올린다는 
+                    불가능한 일을 뜻하는 표현에서 유래했습니다.</p>
+                    <p>→ 하나의 데이터셋으로 여러 데이터셋을 "마법처럼" 만들어낸다!</p>
+                </div>
+
+                <h3>2. Aggregating (집계)</h3>
+                <div class="example-box">
+                    <p>여러 모델의 예측을 하나로 합치는 과정</p>
+                    <ul>
+                        <li><strong>분류 문제:</strong> 투표 (다수결)</li>
+                        <li><strong>회귀 문제:</strong> 평균</li>
+                    </ul>
+                </div>
+
+                <div class="success-box">
+                    <h4>Bagging의 핵심 아이디어</h4>
+                    <p>"같은 데이터에서 <strong>다른 관점</strong>을 가진 여러 모델을 만들고,<br>
+                    이들의 <strong>집단 지성</strong>을 활용하자!"</p>
+                </div>
+            </div>
+
+            <!-- 슬라이드 8: Bootstrap 자세히 -->
+            <div class="slide">
+                <h2>Bootstrap 샘플링 이해하기</h2>
+                
+                <div class="example-box">
+                    <h3>주사위 게임으로 이해하는 Bootstrap</h3>
+                    <p>10개의 번호가 적힌 공이 들어있는 주머니가 있습니다.</p>
+                    <p><strong>일반 샘플링:</strong> 공을 꺼내고 → 옆에 놓고 → 다음 공 꺼내기</p>
+                    <p><strong>Bootstrap 샘플링:</strong> 공을 꺼내고 → 번호 기록 → <span class="highlight">다시 넣고</span> → 다음 공 꺼내기</p>
+                </div>
+
+                <!-- Bootstrap 샘플링 시각화 추가 -->
+                <div class="visualization-container">
+                    <svg width="750" height="400" viewBox="0 0 750 400">
+                        <text x="375" y="25" text-anchor="middle" font-size="18" font-weight="bold" fill="#333">
+                            Bootstrap 샘플링: 복원 추출로 데이터셋 생성
+                        </text>
+                        
+                        <!-- 원본 데이터 테이블 -->
+                        <g id="original-data-table">
+                            <text x="120" y="60" text-anchor="middle" font-size="14" font-weight="bold" fill="#667eea">
+                                &lt;원본 데이터&gt;
+                            </text>
+                            
+                            <!-- 테이블 헤더 -->
+                            <rect x="40" y="75" width="40" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="95" text-anchor="middle" font-size="11" font-weight="bold">순서</text>
+                            
+                            <rect x="80" y="75" width="40" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="95" text-anchor="middle" font-size="11" font-weight="bold">이름</text>
+                            
+                            <rect x="120" y="75" width="50" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="145" y="95" text-anchor="middle" font-size="11" font-weight="bold">특성 1</text>
+                            
+                            <rect x="170" y="75" width="50" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="195" y="95" text-anchor="middle" font-size="11" font-weight="bold">특성 2</text>
+                            
+                            <rect x="220" y="75" width="50" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="245" y="95" text-anchor="middle" font-size="11" font-weight="bold">특성 3</text>
+                            
+                            <rect x="270" y="75" width="40" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="290" y="95" text-anchor="middle" font-size="11" font-weight="bold">특성 4</text>
+                            
+                            <!-- 데이터 행들 -->
+                            <rect x="40" y="105" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="122" text-anchor="middle" font-size="11">1</text>
+                            <rect x="80" y="105" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="122" text-anchor="middle" font-size="11" font-weight="bold" fill="#ff6b6b">A</text>
+                            <rect x="120" y="105" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="145" y="122" text-anchor="middle" font-size="10">0.36</text>
+                            <rect x="170" y="105" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="195" y="122" text-anchor="middle" font-size="10">10.66</text>
+                            <rect x="220" y="105" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="245" y="122" text-anchor="middle" font-size="10">-5.31</text>
+                            <rect x="270" y="105" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="290" y="122" text-anchor="middle" font-size="10">0</text>
+                            
+                            <rect x="40" y="130" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="147" text-anchor="middle" font-size="11">2</text>
+                            <rect x="80" y="130" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="147" text-anchor="middle" font-size="11" font-weight="bold" fill="#4ecdc4">B</text>
+                            <rect x="120" y="130" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="145" y="147" text-anchor="middle" font-size="10">0.81</text>
+                            <rect x="170" y="130" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="195" y="147" text-anchor="middle" font-size="10">12.9</text>
+                            <rect x="220" y="130" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="245" y="147" text-anchor="middle" font-size="10">-4.72</text>
+                            <rect x="270" y="130" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="290" y="147" text-anchor="middle" font-size="10">1</text>
+                            
+                            <rect x="40" y="155" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="172" text-anchor="middle" font-size="11">3</text>
+                            <rect x="80" y="155" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="172" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffe66d">C</text>
+                            <rect x="120" y="155" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="145" y="172" text-anchor="middle" font-size="10">0.53</text>
+                            <rect x="170" y="155" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="195" y="172" text-anchor="middle" font-size="10">10.15</text>
+                            <rect x="220" y="155" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="245" y="172" text-anchor="middle" font-size="10">-5.19</text>
+                            <rect x="270" y="155" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="290" y="172" text-anchor="middle" font-size="10">0</text>
+                            
+                            <rect x="40" y="180" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="197" text-anchor="middle" font-size="11">4</text>
+                            <rect x="80" y="180" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="197" text-anchor="middle" font-size="11" font-weight="bold" fill="#a8e6cf">D</text>
+                            <rect x="120" y="180" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="145" y="197" text-anchor="middle" font-size="10">-0.18</text>
+                            <rect x="170" y="180" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="195" y="197" text-anchor="middle" font-size="10">11.01</text>
+                            <rect x="220" y="180" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="245" y="197" text-anchor="middle" font-size="10">-4.58</text>
+                            <rect x="270" y="180" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="290" y="197" text-anchor="middle" font-size="10">0</text>
+                            
+                            <rect x="40" y="205" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="222" text-anchor="middle" font-size="11">5</text>
+                            <rect x="80" y="205" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="222" text-anchor="middle" font-size="11" font-weight="bold" fill="#ff8cc8">E</text>
+                            <rect x="120" y="205" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="145" y="222" text-anchor="middle" font-size="10">-0.02</text>
+                            <rect x="170" y="205" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="195" y="222" text-anchor="middle" font-size="10">9.72</text>
+                            <rect x="220" y="205" width="50" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="245" y="222" text-anchor="middle" font-size="10">-4.19</text>
+                            <rect x="270" y="205" width="40" height="25" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="290" y="222" text-anchor="middle" font-size="10">1</text>
+                        </g>
+                        
+                        <!-- 화살표 -->
+                        <path d="M 330 150 L 390 150" stroke="#667eea" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+                        
+                        <!-- Bootstrap 샘플 -->
+                        <g id="bootstrap-sample">
+                            <text x="550" y="60" text-anchor="middle" font-size="14" font-weight="bold" fill="#28a745">
+                                &lt;Bootstrap Sample&gt;
+                            </text>
+                            
+                            <!-- 테이블 헤더 -->
+                            <rect x="430" y="75" width="40" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="450" y="95" text-anchor="middle" font-size="11" font-weight="bold">순서</text>
+                            
+                            <rect x="470" y="75" width="40" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="490" y="95" text-anchor="middle" font-size="11" font-weight="bold">이름</text>
+                            
+                            <rect x="510" y="75" width="50" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="535" y="95" text-anchor="middle" font-size="11" font-weight="bold">특성 1</text>
+                            
+                            <rect x="560" y="75" width="50" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="585" y="95" text-anchor="middle" font-size="11" font-weight="bold">특성 2</text>
+                            
+                            <rect x="610" y="75" width="50" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="635" y="95" text-anchor="middle" font-size="11" font-weight="bold">특성 3</text>
+                            
+                            <rect x="660" y="75" width="40" height="30" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="680" y="95" text-anchor="middle" font-size="11" font-weight="bold">특성 4</text>
+                            
+                            <!-- Bootstrap으로 선택된 데이터 (B, E, C, B) -->
+                            <rect x="430" y="105" width="40" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="450" y="122" text-anchor="middle" font-size="11">1</text>
+                            <rect x="470" y="105" width="40" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="490" y="122" text-anchor="middle" font-size="11" font-weight="bold" fill="#4ecdc4">B</text>
+                            <rect x="510" y="105" width="50" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="535" y="122" text-anchor="middle" font-size="10">0.81</text>
+                            <rect x="560" y="105" width="50" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="585" y="122" text-anchor="middle" font-size="10">12.9</text>
+                            <rect x="610" y="105" width="50" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="635" y="122" text-anchor="middle" font-size="10">-4.72</text>
+                            <rect x="660" y="105" width="40" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="680" y="122" text-anchor="middle" font-size="10">1</text>
+                            
+                            <rect x="430" y="130" width="40" height="25" fill="#f3e5f5" stroke="#333" stroke-width="1"/>
+                            <text x="450" y="147" text-anchor="middle" font-size="11">2</text>
+                            <rect x="470" y="130" width="40" height="25" fill="#f3e5f5" stroke="#333" stroke-width="1"/>
+                            <text x="490" y="147" text-anchor="middle" font-size="11" font-weight="bold" fill="#ff8cc8">E</text>
+                            <rect x="510" y="130" width="50" height="25" fill="#f3e5f5" stroke="#333" stroke-width="1"/>
+                            <text x="535" y="147" text-anchor="middle" font-size="10">-0.02</text>
+                            <rect x="560" y="130" width="50" height="25" fill="#f3e5f5" stroke="#333" stroke-width="1"/>
+                            <text x="585" y="147" text-anchor="middle" font-size="10">9.72</text>
+                            <rect x="610" y="130" width="50" height="25" fill="#f3e5f5" stroke="#333" stroke-width="1"/>
+                            <text x="635" y="147" text-anchor="middle" font-size="10">-4.19</text>
+                            <rect x="660" y="130" width="40" height="25" fill="#f3e5f5" stroke="#333" stroke-width="1"/>
+                            <text x="680" y="147" text-anchor="middle" font-size="10">1</text>
+                            
+                            <rect x="430" y="155" width="40" height="25" fill="#fff3cd" stroke="#333" stroke-width="1"/>
+                            <text x="450" y="172" text-anchor="middle" font-size="11">3</text>
+                            <rect x="470" y="155" width="40" height="25" fill="#fff3cd" stroke="#333" stroke-width="1"/>
+                            <text x="490" y="172" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffe66d">C</text>
+                            <rect x="510" y="155" width="50" height="25" fill="#fff3cd" stroke="#333" stroke-width="1"/>
+                            <text x="535" y="172" text-anchor="middle" font-size="10">0.53</text>
+                            <rect x="560" y="155" width="50" height="25" fill="#fff3cd" stroke="#333" stroke-width="1"/>
+                            <text x="585" y="172" text-anchor="middle" font-size="10">10.15</text>
+                            <rect x="610" y="155" width="50" height="25" fill="#fff3cd" stroke="#333" stroke-width="1"/>
+                            <text x="635" y="172" text-anchor="middle" font-size="10">-5.19</text>
+                            <rect x="660" y="155" width="40" height="25" fill="#fff3cd" stroke="#333" stroke-width="1"/>
+                            <text x="680" y="172" text-anchor="middle" font-size="10">0</text>
+                            
+                            <rect x="430" y="180" width="40" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="450" y="197" text-anchor="middle" font-size="11">4</text>
+                            <rect x="470" y="180" width="40" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="490" y="197" text-anchor="middle" font-size="11" font-weight="bold" fill="#4ecdc4">B</text>
+                            <rect x="510" y="180" width="50" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="535" y="197" text-anchor="middle" font-size="10">0.81</text>
+                            <rect x="560" y="180" width="50" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="585" y="197" text-anchor="middle" font-size="10">12.9</text>
+                            <rect x="610" y="180" width="50" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="635" y="197" text-anchor="middle" font-size="10">-4.72</text>
+                            <rect x="660" y="180" width="40" height="25" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="680" y="197" text-anchor="middle" font-size="10">1</text>
+                        </g>
+                        
+                        <!-- 설명 텍스트 -->
+                        <rect x="150" y="260" width="450" height="80" fill="#fff3cd" stroke="#ffc107" stroke-width="2" rx="5"/>
+                        <text x="375" y="285" text-anchor="middle" font-size="13" font-weight="bold" fill="#856404">
+                            Bootstrap 샘플링 특징
+                        </text>
+                        <text x="375" y="305" text-anchor="middle" font-size="11" fill="#666">
+                            • 복원 추출: B가 2번 선택됨 (중복 허용)
+                        </text>
+                        <text x="375" y="322" text-anchor="middle" font-size="11" fill="#666">
+                            • 미포함 데이터: A, D는 선택되지 않음 (OOB 샘플)
+                        </text>
+                        
+                        <text x="375" y="365" text-anchor="middle" font-size="11" font-style="italic" fill="#666">
+                            여러 개의 Bootstrap 샘플을 만들어 각각 다른 모델을 학습시킵니다
+                        </text>
+                        
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#667eea"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+
+                <h3>Bootstrap의 특징</h3>
+                <div class="box">
+                    <h4>1. 복원 추출 (Sampling with Replacement)</h4>
+                    <ul>
+                        <li>같은 샘플이 여러 번 선택될 수 있음</li>
+                        <li>어떤 샘플은 한 번도 선택되지 않을 수 있음</li>
+                    </ul>
+                    
+                    <h4>2. 원본과 같은 크기</h4>
+                    <ul>
+                        <li>원본 데이터: n개 샘플</li>
+                        <li>Bootstrap 샘플: 똑같이 n개 샘플 (중복 포함)</li>
+                    </ul>
+                </div>
+
+                <div class="warning-box">
+                    <h4>왜 복원 추출인가?</h4>
+                    <p>복원 추출을 통해 각 Bootstrap 샘플이 원본 데이터의 
+                    <strong>다른 부분</strong>을 강조하게 됩니다.</p>
+                    <p>→ 각 모델이 데이터의 다른 패턴을 학습!</p>
+                </div>
+            </div>
+
+            <!-- 슬라이드 9: 63.2%의 비밀 -->
+            <div class="slide">
+                <h2>36.8%의 마법: Out-of-Bag (OOB)</h2>
+                
+                <h3>수학적 증명</h3>
+                <div class="formula">
+                    한 샘플이 Bootstrap에서 선택되지 않을 확률:<br><br>
+                    P(선택 안됨) = (1 - 1/n)ⁿ<br><br>
+                    n이 커질수록: lim(n→∞) (1 - 1/n)ⁿ = e⁻¹ ≈ 0.368<br><br>
+                    따라서 선택될 확률 = 1 - 0.368 = <strong>0.632 (63.2%)</strong>
+                </div>
+
+                <h3>실제로 계산해보면</h3>
+                <table>
+                    <tr>
+                        <th>데이터 크기 (n)</th>
+                        <th>(1 - 1/n)ⁿ</th>
+                        <th>선택될 확률</th>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>0.349</td>
+                        <td>65.1%</td>
+                    </tr>
+                    <tr>
+                        <td>100</td>
+                        <td>0.366</td>
+                        <td>63.4%</td>
+                    </tr>
+                    <tr>
+                        <td>1000</td>
+                        <td>0.368</td>
+                        <td>63.2%</td>
+                    </tr>
+                    <tr>
+                        <td>∞</td>
+                        <td>0.368 (e⁻¹)</td>
+                        <td>63.2%</td>
+                    </tr>
+                </table>
+
+                <div class="success-box">
+                    <h3>OOB의 선물</h3>
+                    <p>각 Bootstrap 샘플에서 약 36.8%의 데이터가 사용되지 않습니다.</p>
+                    <p>이들을 <strong>"공짜 검증 데이터"</strong>로 활용할 수 있습니다!</p>
+                    <ul>
+                        <li>Cross-validation 없이도 성능 평가 가능</li>
+                        <li>추가 계산 비용 없음</li>
+                        <li>데이터를 100% 활용</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 슬라이드 10: Bootstrap 실습 코드 -->
+            <div class="slide">
+                <h2>Bootstrap 샘플링 실습</h2>
+                <div class="code-section">
+                    <h3>Python으로 Bootstrap 구현하기</h3>
+                    <pre><code>import numpy as np
+import pandas as pd
+
+def bootstrap_demo(data, n_bootstraps=3):
+    """Bootstrap 샘플링 데모"""
+    n = len(data)
+    
+    for i in range(n_bootstraps):
+        # 복원 추출로 n개 샘플링
+        indices = np.random.choice(n, size=n, replace=True)
+        bootstrap_sample = data[indices]
+        
+        # 통계 출력
+        unique_indices = np.unique(indices)
+        missing_indices = set(range(n)) - set(indices)
+        
+        print(f"\nBootstrap 샘플 {i+1}:")
+        print(f"  선택된 인덱스: {indices}")
+        print(f"  중복 제거 후: {len(unique_indices)}개 ({len(unique_indices)/n*100:.1f}%)")
+        print(f"  미포함 샘플: {len(missing_indices)}개 ({len(missing_indices)/n*100:.1f}%)")
+        print(f"  Bootstrap 샘플: {bootstrap_sample}")
+
+# 예제 실행
+original_data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+print("원본 데이터:", original_data)
+bootstrap_demo(original_data)</code></pre>
+                </div>
+
+                <div class="code-section">
+                    <h3>OOB 비율 실험</h3>
+                    <pre><code>def oob_experiment(n_samples, n_iterations=1000):
+    """OOB 비율을 실험적으로 확인"""
+    oob_counts = np.zeros(n_samples)
+    
+    for _ in range(n_iterations):
+        indices = np.random.choice(n_samples, n_samples, replace=True)
+        for i in range(n_samples):
+            if i not in indices:
+                oob_counts[i] += 1
+    
+    oob_rate = oob_counts.mean() / n_iterations
+    print(f"데이터 크기 {n_samples}:")
+    print(f"  이론적 OOB 비율: {(1 - 1/n_samples)**n_samples:.3f}")
+    print(f"  실험적 OOB 비율: {oob_rate:.3f}")
+    
+# 다양한 크기로 실험
+for n in [10, 50, 100, 500, 1000]:
+    oob_experiment(n)</code></pre>
+                </div>
+            </div>
+
+            <!-- 슬라이드 11: Bagging 구현 -->
+            <div class="slide">
+                <h2>Bagging 구현하기</h2>
+                
+                <div class="code-section">
+                    <h3>간단한 Bagging Classifier 구현</h3>
+                    <pre><code>from sklearn.base import clone
+from scipy.stats import mode
+import numpy as np
+
+class SimpleBaggingClassifier:
+    """간단한 Bagging 분류기 구현"""
+    
+    def __init__(self, base_estimator, n_estimators=10):
+        """
+        Parameters:
+        -----------
+        base_estimator : 기본 모델 (예: DecisionTreeClassifier())
+        n_estimators : Bootstrap 샘플 개수
+        """
+        self.base_estimator = base_estimator
+        self.n_estimators = n_estimators
+        self.estimators_ = []
+        self.oob_indices_ = []
+    
+    def fit(self, X, y):
+        """Bagging 학습"""
+        n_samples = X.shape[0]
+        
+        for i in range(self.n_estimators):
+            # 1. Bootstrap 샘플 생성
+            indices = np.random.choice(n_samples, n_samples, replace=True)
+            X_bootstrap = X[indices]
+            y_bootstrap = y[indices]
+            
+            # OOB 인덱스 저장
+            oob_idx = list(set(range(n_samples)) - set(indices))
+            self.oob_indices_.append(oob_idx)
+            
+            # 2. 모델 학습
+            estimator = clone(self.base_estimator)
+            estimator.fit(X_bootstrap, y_bootstrap)
+            self.estimators_.append(estimator)
+            
+        return self
+    
+    def predict(self, X):
+        """예측: 투표로 결정"""
+        # 모든 모델의 예측 수집
+        predictions = np.array([
+            estimator.predict(X) for estimator in self.estimators_
+        ])
+        
+        # 다수결 투표
+        final_predictions = mode(predictions, axis=0)[0].ravel()
+        return final_predictions
+    
+    def predict_proba(self, X):
+        """클래스 확률 예측"""
+        # 각 모델의 예측을 평균
+        probas = np.array([
+            estimator.predict_proba(X) for estimator in self.estimators_
+        ])
+        return probas.mean(axis=0)
+
+# 사용 예시
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.datasets import make_classification
+
+# 데이터 생성
+X, y = make_classification(n_samples=100, n_features=20, n_informative=15)
+
+# Bagging 모델 생성 및 학습
+bagging = SimpleBaggingClassifier(
+    base_estimator=DecisionTreeClassifier(max_depth=5),
+    n_estimators=10
+)
+bagging.fit(X, y)
+
+# 예측
+predictions = bagging.predict(X)
+print(f"학습 정확도: {(predictions == y).mean():.3f}")</code></pre>
+                </div>
+            </div>
+
+            <!-- 슬라이드 12: scikit-learn Bagging -->
+            <div class="slide">
+                <h2>scikit-learn으로 Bagging 사용하기</h2>
+                
+                <div class="code-section">
+                    <h3>BaggingClassifier 사용법</h3>
+                    <pre><code>from sklearn.ensemble import BaggingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import load_wine
+
+# 1. 데이터 준비
+wine = load_wine()
+X, y = wine.data, wine.target
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+# 2. 단일 Decision Tree
+single_tree = DecisionTreeClassifier(random_state=42)
+single_tree.fit(X_train, y_train)
+single_score = single_tree.score(X_test, y_test)
+
+# 3. Bagging with Decision Trees
+bagging = BaggingClassifier(
+    base_estimator=DecisionTreeClassifier(),  # 기본 모델
+    n_estimators=100,        # 모델 개수
+    max_samples=1.0,         # 각 샘플의 크기 (1.0 = 100%)
+    max_features=1.0,        # 각 모델이 사용할 특성 비율
+    bootstrap=True,          # Bootstrap 샘플링 사용
+    bootstrap_features=False, # 특성은 Bootstrap 안함
+    oob_score=True,          # OOB score 계산
+    random_state=42
+)
+bagging.fit(X_train, y_train)
+bagging_score = bagging.score(X_test, y_test)
+
+# 4. 결과 비교
+print("="*50)
+print("Wine 데이터셋 분류 결과")
+print("="*50)
+print(f"단일 Decision Tree:")
+print(f"  테스트 정확도: {single_score:.3f}")
+print(f"\nBagging (100 trees):")
+print(f"  테스트 정확도: {bagging_score:.3f}")
+print(f"  OOB 점수: {bagging.oob_score_:.3f}")
+print(f"  성능 향상: +{(bagging_score - single_score)*100:.1f}%")</code></pre>
+                </div>
+
+                <div class="code-section">
+                    <h3>다양한 기본 모델로 Bagging</h3>
+                    <pre><code>from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+
+# SVM으로 Bagging
+bagging_svm = BaggingClassifier(
+    base_estimator=SVC(kernel='rbf', probability=True),
+    n_estimators=10,  # SVM은 느리므로 적게
+    random_state=42
+)
+
+# KNN으로 Bagging
+bagging_knn = BaggingClassifier(
+    base_estimator=KNeighborsClassifier(n_neighbors=5),
+    n_estimators=50,
+    random_state=42
+)
+
+# 비교
+models = {
+    'Single Tree': single_tree,
+    'Bagging Tree': bagging,
+    'Bagging SVM': bagging_svm,
+    'Bagging KNN': bagging_knn
+}
+
+for name, model in models.items():
+    if name != 'Single Tree':
+        model.fit(X_train, y_train)
+    score = model.score(X_test, y_test)
+    print(f"{name:15s}: {score:.3f}")</code></pre>
+                </div>
+            </div>
+
+            <!-- 슬라이드 13: 분산 감소 원리 -->
+            <div class="slide">
+                <h2>왜 Bagging이 효과적인가? - 분산 감소</h2>
+                
+                <h3>분산-편향 트레이드오프</h3>
+                <div class="box">
+                    <p><strong>총 오차 = 편향² + 분산 + 노이즈</strong></p>
+                    <ul>
+                        <li><strong>편향(Bias):</strong> 모델이 얼마나 정답에서 벗어나는가</li>
+                        <li><strong>분산(Variance):</strong> 다른 데이터에서 예측이 얼마나 달라지는가</li>
+                        <li><strong>노이즈:</strong> 데이터 자체의 불확실성</li>
+                    </ul>
+                </div>
+
+                <div class="formula">
+                    <strong>Bagging의 분산 감소 효과</strong><br><br>
+                    독립적인 모델 M개의 평균:<br>
+                    Var(평균) = Var(개별) / M<br><br>
+                    예: 분산 1.0인 모델 100개 → 평균의 분산 = 0.01
+                </div>
+
+                <div class="example-box">
+                    <h3>주사위 예시</h3>
+                    <p>주사위 눈의 평균을 추정한다고 가정:</p>
+                    <ul>
+                        <li>1번 던지기: 분산이 큼 (1~6 모두 가능)</li>
+                        <li>100번 던져서 평균: 분산이 작음 (3.5 근처)</li>
+                    </ul>
+                    <p>→ 여러 번 시도의 평균이 더 안정적!</p>
+                </div>
+            </div>
+
+            <!-- 슬라이드 14: OOB Error -->
+            <div class="slide">
+                <h2>Out-of-Bag (OOB) Error 활용하기</h2>
+                
+                <h3>OOB Error란?</h3>
+                <div class="box">
+                    <p>각 샘플에 대해, 그 샘플이 포함되지 않은 Bootstrap 샘플로 학습한 
+                    모델들만 사용하여 예측하고 오차를 계산</p>
+                </div>
+
+                <h3>OOB Error 계산 과정</h3>
+                <div class="example-box">
+                    <p><strong>예시: 샘플 x₁에 대한 OOB 예측</strong></p>
+                    <ol>
+                        <li>x₁이 포함되지 않은 모델 찾기: Model₂, Model₅, Model₇, ...</li>
+                        <li>해당 모델들로 x₁ 예측</li>
+                        <li>예측값들을 투표/평균</li>
+                        <li>실제 레이블과 비교</li>
+                    </ol>
+                    <p>→ 모든 샘플에 대해 반복하여 전체 OOB Error 계산</p>
+                </div>
+
+                <div class="success-box">
+                    <h3>OOB의 장점</h3>
+                    <ul>
+                        <li>추가 검증 데이터 불필요</li>
+                        <li>Cross-validation과 유사한 효과</li>
+                        <li>계산 비용 없음 (이미 계산된 모델 사용)</li>
+                        <li>모든 데이터를 학습에 활용</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 슬라이드 15: OOB 실습 -->
+            <div class="slide">
+                <h2>OOB Score 실습</h2>
+                
+                <div class="code-section">
+                    <h3>OOB Score 계산 및 활용</h3>
+                    <pre><code>from sklearn.ensemble import BaggingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import cross_val_score
+import numpy as np
+
+# 데이터 준비
+from sklearn.datasets import load_breast_cancer
+X, y = load_breast_cancer(return_X_y=True)
+
+# OOB Score를 사용하는 Bagging
+bagging_oob = BaggingClassifier(
+    base_estimator=DecisionTreeClassifier(max_depth=5),
+    n_estimators=100,
+    oob_score=True,  # OOB Score 활성화
+    random_state=42
+)
+
+# 학습
+bagging_oob.fit(X, y)
+
+# OOB Score 확인
+print(f"OOB Score: {bagging_oob.oob_score_:.4f}")
+
+# OOB 예측 확인 (각 샘플에 대한 OOB 예측)
+oob_predictions = bagging_oob.oob_decision_function_
+print(f"OOB 예측 shape: {oob_predictions.shape}")
+print(f"첫 5개 샘플의 OOB 예측:\n{oob_predictions[:5]}")
+
+# Cross-validation과 비교
+cv_scores = cross_val_score(bagging_oob, X, y, cv=5)
+print(f"\n5-Fold CV Score: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
+print(f"OOB Score: {bagging_oob.oob_score_:.4f}")
+print("\n→ OOB Score와 CV Score가 유사함!")</code></pre>
+                </div>
+
+                <div class="code-section">
+                    <h3>OOB를 이용한 조기 종료</h3>
+                    <pre><code># n_estimators 최적화: OOB score가 수렴하는 지점 찾기
+oob_scores = []
+n_estimators_range = range(10, 201, 10)
+
+for n_est in n_estimators_range:
+    bagging = BaggingClassifier(
+        base_estimator=DecisionTreeClassifier(max_depth=5),
+        n_estimators=n_est,
+        oob_score=True,
+        random_state=42
+    )
+    bagging.fit(X, y)
+    oob_scores.append(bagging.oob_score_)
+    
+    print(f"n_estimators={n_est:3d}: OOB Score={bagging.oob_score_:.4f}")
+
+# 수렴 지점 찾기
+best_n = n_estimators_range[np.argmax(oob_scores)]
+print(f"\n최적 n_estimators: {best_n}")
+print(f"최고 OOB Score: {max(oob_scores):.4f}")</code></pre>
+                </div>
+            </div>
+
+            <!-- 슬라이드 16: Random Forest 소개 - Tree에서 Forest로 -->
+            <div class="slide">
+                <h2>Random Forest: 나무에서 숲으로의 진화</h2>
+                
+                <div class="box">
+                    <h3>Decision Tree → Forest: 진화의 서사</h3>
+                    <p>하나의 Decision Tree는 강력하지만 불안정합니다.</p>
+                    <p>여러 개의 Tree가 모여 Forest를 이루면?</p>
+                    <p><strong>"개별적으로는 약하지만, 함께하면 강하다!"</strong></p>
+                </div>
+
+                <div class="example-box">
+                    <h3>Random Forest의 탄생 (2001)</h3>
+                    <p>Leo Breiman이 Bagging을 한 단계 더 발전시킨 알고리즘</p>
+                    <p><strong>Random Forest = Bagging + Feature Randomness</strong></p>
+                </div>
+
+                <h3>왜 Bagging만으로는 부족한가?</h3>
+                <div class="warning-box">
+                    <h4>Bagging의 한계: 트리들 간의 높은 상관관계</h4>
+                    <ul>
+                        <li><strong>강한 예측 변수의 지배:</strong> 매우 강한 예측력을 가진 특성이 있으면, 
+                        모든 트리가 그 특성을 루트 노드 근처에서 선택</li>
+                        <li><strong>유사한 트리 구조:</strong> Bootstrap 샘플이 달라도 트리 구조가 비슷해짐</li>
+                        <li><strong>제한된 다양성:</strong> 트리들이 비슷한 예측을 하면 앙상블 효과 감소</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 슬라이드 17: 트리 상관관계 문제 상세 -->
+            <div class="slide">
+                <h2>트리 간 상관관계가 왜 문제인가?</h2>
+                
+                <div class="formula">
+                    앙상블 분산 = ρσ² + (1-ρ)σ²/M<br><br>
+                    • ρ: 트리 간 상관계수<br>
+                    • σ²: 개별 트리 분산<br>
+                    • M: 트리 개수
+                </div>
+
+                <div class="danger-box">
+                    <h4>상관관계가 높으면 (ρ가 크면)</h4>
+                    <ul>
+                        <li>첫 번째 항(ρσ²)이 지배적</li>
+                        <li>트리 개수(M)를 늘려도 효과가 제한적</li>
+                        <li>앙상블의 이점이 감소</li>
+                    </ul>
+                </div>
+
+                <div class="example-box">
+                    <h4>예시: 주택 가격 예측</h4>
+                    <p>특성: [면적, 위치, 층수, 연식, 학군, 교통]</p>
+                    <p>만약 '면적'이 압도적으로 중요하다면:</p>
+                    <ul>
+                        <li><strong>Bagging:</strong> 모든 트리가 '면적'을 최상위 노드에서 사용</li>
+                        <li>결과: 트리들이 매우 유사함 (ρ ≈ 0.7)</li>
+                        <li><strong>Random Forest:</strong> 각 노드에서 일부 특성만 고려</li>
+                        <li>결과: 트리들이 다양함 (ρ ≈ 0.2)</li>
+                    </ul>
+                </div>
+
+                <div class="success-box">
+                    <h4>해결책: Feature Randomness</h4>
+                    <p>각 노드에서 분할을 결정할 때 모든 특성이 아닌 무작위로 선택된 일부 특성만 고려!</p>
+                </div>
+            </div>
+
+            <!-- 슬라이드 17-2: Random Forest Bootstrap + Feature Selection 시각화 추가 -->
+            <div class="slide">
+                <h2>Random Forest: Bootstrap + Random Feature Selection</h2>
+                
+                <div class="visualization-container">
+                    <svg width="750" height="550" viewBox="0 0 750 550">
+                        <text x="375" y="25" text-anchor="middle" font-size="18" font-weight="bold" fill="#333">
+                            Bootstrap + Random Feature Selection
+                        </text>
+                        
+                        <!-- 원본 데이터 테이블 -->
+                        <g id="original-full-data">
+                            <text x="180" y="55" text-anchor="middle" font-size="14" font-weight="bold" fill="#667eea">
+                                &lt;원본 데이터&gt;
+                            </text>
+                            
+                            <!-- 테이블 헤더 -->
+                            <rect x="40" y="70" width="40" height="25" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="88" text-anchor="middle" font-size="10" font-weight="bold">순서</text>
+                            
+                            <rect x="80" y="70" width="40" height="25" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="88" text-anchor="middle" font-size="10" font-weight="bold">이름</text>
+                            
+                            <rect x="120" y="70" width="45" height="25" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="142" y="88" text-anchor="middle" font-size="10" font-weight="bold">특성 1</text>
+                            
+                            <rect x="165" y="70" width="45" height="25" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="187" y="88" text-anchor="middle" font-size="10" font-weight="bold">특성 2</text>
+                            
+                            <rect x="210" y="70" width="45" height="25" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="232" y="88" text-anchor="middle" font-size="10" font-weight="bold">특성 3</text>
+                            
+                            <rect x="255" y="70" width="45" height="25" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="277" y="88" text-anchor="middle" font-size="10" font-weight="bold">특성 4</text>
+                            
+                            <!-- 데이터 행들 -->
+                            <rect x="40" y="95" width="40" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="109" text-anchor="middle" font-size="10">1</text>
+                            <rect x="80" y="95" width="40" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="109" text-anchor="middle" font-size="10" font-weight="bold" fill="#ff6b6b">A</text>
+                            <rect x="120" y="95" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="142" y="109" text-anchor="middle" font-size="9">0.36</text>
+                            <rect x="165" y="95" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="187" y="109" text-anchor="middle" font-size="9">10.66</text>
+                            <rect x="210" y="95" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="232" y="109" text-anchor="middle" font-size="9">-5.31</text>
+                            <rect x="255" y="95" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="277" y="109" text-anchor="middle" font-size="9">0</text>
+                            
+                            <rect x="40" y="117" width="40" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="131" text-anchor="middle" font-size="10">2</text>
+                            <rect x="80" y="117" width="40" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="131" text-anchor="middle" font-size="10" font-weight="bold" fill="#4ecdc4">B</text>
+                            <rect x="120" y="117" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="142" y="131" text-anchor="middle" font-size="9">0.81</text>
+                            <rect x="165" y="117" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="187" y="131" text-anchor="middle" font-size="9">12.9</text>
+                            <rect x="210" y="117" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="232" y="131" text-anchor="middle" font-size="9">-4.72</text>
+                            <rect x="255" y="117" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="277" y="131" text-anchor="middle" font-size="9">1</text>
+                            
+                            <rect x="40" y="139" width="40" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="153" text-anchor="middle" font-size="10">3</text>
+                            <rect x="80" y="139" width="40" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="153" text-anchor="middle" font-size="10" font-weight="bold" fill="#ffe66d">C</text>
+                            <rect x="120" y="139" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="142" y="153" text-anchor="middle" font-size="9">0.53</text>
+                            <rect x="165" y="139" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="187" y="153" text-anchor="middle" font-size="9">10.15</text>
+                            <rect x="210" y="139" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="232" y="153" text-anchor="middle" font-size="9">-5.19</text>
+                            <rect x="255" y="139" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="277" y="153" text-anchor="middle" font-size="9">0</text>
+                            
+                            <rect x="40" y="161" width="40" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="175" text-anchor="middle" font-size="10">4</text>
+                            <rect x="80" y="161" width="40" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="175" text-anchor="middle" font-size="10" font-weight="bold" fill="#a8e6cf">D</text>
+                            <rect x="120" y="161" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="142" y="175" text-anchor="middle" font-size="9">-0.18</text>
+                            <rect x="165" y="161" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="187" y="175" text-anchor="middle" font-size="9">11.01</text>
+                            <rect x="210" y="161" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="232" y="175" text-anchor="middle" font-size="9">-4.58</text>
+                            <rect x="255" y="161" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="277" y="175" text-anchor="middle" font-size="9">0</text>
+                            
+                            <rect x="40" y="183" width="40" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="60" y="197" text-anchor="middle" font-size="10">5</text>
+                            <rect x="80" y="183" width="40" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="100" y="197" text-anchor="middle" font-size="10" font-weight="bold" fill="#ff8cc8">E</text>
+                            <rect x="120" y="183" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="142" y="197" text-anchor="middle" font-size="9">-0.02</text>
+                            <rect x="165" y="183" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="187" y="197" text-anchor="middle" font-size="9">9.72</text>
+                            <rect x="210" y="183" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="232" y="197" text-anchor="middle" font-size="9">-4.19</text>
+                            <rect x="255" y="183" width="45" height="22" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="277" y="197" text-anchor="middle" font-size="9">1</text>
+                        </g>
+                        
+                        <!-- 화살표 1 -->
+                        <path d="M 320 110 L 380 80" stroke="#667eea" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                        <path d="M 320 135 L 380 135" stroke="#667eea" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                        <path d="M 320 160 L 380 190" stroke="#667eea" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                        
+                        <!-- RF Sample 1 -->
+                        <g id="rf-sample-1">
+                            <text x="500" y="55" text-anchor="middle" font-size="12" font-weight="bold" fill="#2196f3">
+                                &lt;RF Sample 1&gt;
+                            </text>
+                            <text x="500" y="70" text-anchor="middle" font-size="10" fill="#666">특성 1,2,4 선택</text>
+                            
+                            <!-- 테이블 헤더 -->
+                            <rect x="410" y="80" width="35" height="20" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="427" y="94" text-anchor="middle" font-size="9" font-weight="bold">이름</text>
+                            
+                            <rect x="445" y="80" width="40" height="20" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="465" y="94" text-anchor="middle" font-size="9" font-weight="bold">특성 1</text>
+                            
+                            <rect x="485" y="80" width="40" height="20" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="505" y="94" text-anchor="middle" font-size="9" font-weight="bold">특성 2</text>
+                            
+                            <rect x="525" y="80" width="40" height="20" fill="#e3f2fd" stroke="#333" stroke-width="1"/>
+                            <text x="545" y="94" text-anchor="middle" font-size="9" font-weight="bold">특성 4</text>
+                            
+                            <!-- 데이터 행들 (B, E, C, B) -->
+                            <rect x="410" y="100" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="427" y="112" text-anchor="middle" font-size="9" font-weight="bold" fill="#4ecdc4">B</text>
+                            <rect x="445" y="100" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="465" y="112" text-anchor="middle" font-size="8">0.81</text>
+                            <rect x="485" y="100" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="505" y="112" text-anchor="middle" font-size="8">12.9</text>
+                            <rect x="525" y="100" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="545" y="112" text-anchor="middle" font-size="8">1</text>
+                            
+                            <rect x="410" y="118" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="427" y="130" text-anchor="middle" font-size="9" font-weight="bold" fill="#ff8cc8">E</text>
+                            <rect x="445" y="118" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="465" y="130" text-anchor="middle" font-size="8">-0.02</text>
+                            <rect x="485" y="118" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="505" y="130" text-anchor="middle" font-size="8">9.72</text>
+                            <rect x="525" y="118" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="545" y="130" text-anchor="middle" font-size="8">1</text>
+                            
+                            <rect x="410" y="136" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="427" y="148" text-anchor="middle" font-size="9" font-weight="bold" fill="#ffe66d">C</text>
+                            <rect x="445" y="136" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="465" y="148" text-anchor="middle" font-size="8">0.53</text>
+                            <rect x="485" y="136" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="505" y="148" text-anchor="middle" font-size="8">10.15</text>
+                            <rect x="525" y="136" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="545" y="148" text-anchor="middle" font-size="8">0</text>
+                            
+                            <rect x="410" y="154" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="427" y="166" text-anchor="middle" font-size="9" font-weight="bold" fill="#4ecdc4">B</text>
+                            <rect x="445" y="154" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="465" y="166" text-anchor="middle" font-size="8">0.81</text>
+                            <rect x="485" y="154" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="505" y="166" text-anchor="middle" font-size="8">12.9</text>
+                            <rect x="525" y="154" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="545" y="166" text-anchor="middle" font-size="8">1</text>
+                        </g>
+                        
+                        <!-- RF Sample 2 -->
+                        <g id="rf-sample-2">
+                            <text x="500" y="200" text-anchor="middle" font-size="12" font-weight="bold" fill="#9c27b0">
+                                &lt;RF Sample 2&gt;
+                            </text>
+                            <text x="500" y="215" text-anchor="middle" font-size="10" fill="#666">특성 2,3 선택</text>
+                            
+                            <!-- 테이블 헤더 -->
+                            <rect x="430" y="225" width="35" height="20" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="447" y="239" text-anchor="middle" font-size="9" font-weight="bold">이름</text>
+                            
+                            <rect x="465" y="225" width="40" height="20" fill="#f3e5f5" stroke="#333" stroke-width="1"/>
+                            <text x="485" y="239" text-anchor="middle" font-size="9" font-weight="bold">특성 2</text>
+                            
+                            <rect x="505" y="225" width="40" height="20" fill="#f3e5f5" stroke="#333" stroke-width="1"/>
+                            <text x="525" y="239" text-anchor="middle" font-size="9" font-weight="bold">특성 3</text>
+                            
+                            <!-- 데이터 행들 (A, D, C, D) -->
+                            <rect x="430" y="245" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="447" y="257" text-anchor="middle" font-size="9" font-weight="bold" fill="#ff6b6b">A</text>
+                            <rect x="465" y="245" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="485" y="257" text-anchor="middle" font-size="8">10.66</text>
+                            <rect x="505" y="245" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="525" y="257" text-anchor="middle" font-size="8">-5.31</text>
+                            
+                            <rect x="430" y="263" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="447" y="275" text-anchor="middle" font-size="9" font-weight="bold" fill="#a8e6cf">D</text>
+                            <rect x="465" y="263" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="485" y="275" text-anchor="middle" font-size="8">11.01</text>
+                            <rect x="505" y="263" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="525" y="275" text-anchor="middle" font-size="8">-4.58</text>
+                            
+                            <rect x="430" y="281" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="447" y="293" text-anchor="middle" font-size="9" font-weight="bold" fill="#ffe66d">C</text>
+                            <rect x="465" y="281" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="485" y="293" text-anchor="middle" font-size="8">10.15</text>
+                            <rect x="505" y="281" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="525" y="293" text-anchor="middle" font-size="8">-5.19</text>
+                            
+                            <rect x="430" y="299" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="447" y="311" text-anchor="middle" font-size="9" font-weight="bold" fill="#a8e6cf">D</text>
+                            <rect x="465" y="299" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="485" y="311" text-anchor="middle" font-size="8">11.01</text>
+                            <rect x="505" y="299" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="525" y="311" text-anchor="middle" font-size="8">-4.58</text>
+                        </g>
+                        
+                        <!-- RF Sample 3 -->
+                        <g id="rf-sample-3">
+                            <text x="500" y="345" text-anchor="middle" font-size="12" font-weight="bold" fill="#4caf50">
+                                &lt;RF Sample 3&gt;
+                            </text>
+                            <text x="500" y="360" text-anchor="middle" font-size="10" fill="#666">특성 1,3,4 선택</text>
+                            
+                            <!-- 테이블 헤더 -->
+                            <rect x="410" y="370" width="35" height="20" fill="#e8e8e8" stroke="#333" stroke-width="1"/>
+                            <text x="427" y="384" text-anchor="middle" font-size="9" font-weight="bold">이름</text>
+                            
+                            <rect x="445" y="370" width="40" height="20" fill="#e8f5e9" stroke="#333" stroke-width="1"/>
+                            <text x="465" y="384" text-anchor="middle" font-size="9" font-weight="bold">특성 1</text>
+                            
+                            <rect x="485" y="370" width="40" height="20" fill="#e8f5e9" stroke="#333" stroke-width="1"/>
+                            <text x="505" y="384" text-anchor="middle" font-size="9" font-weight="bold">특성 3</text>
+                            
+                            <rect x="525" y="370" width="40" height="20" fill="#e8f5e9" stroke="#333" stroke-width="1"/>
+                            <text x="545" y="384" text-anchor="middle" font-size="9" font-weight="bold">특성 4</text>
+                            
+                            <!-- 데이터 행들 (C, C, E, A, E) -->
+                            <rect x="410" y="390" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="427" y="402" text-anchor="middle" font-size="9" font-weight="bold" fill="#ffe66d">C</text>
+                            <rect x="445" y="390" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="465" y="402" text-anchor="middle" font-size="8">0.53</text>
+                            <rect x="485" y="390" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="505" y="402" text-anchor="middle" font-size="8">-5.19</text>
+                            <rect x="525" y="390" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="545" y="402" text-anchor="middle" font-size="8">0</text>
+                            
+                            <rect x="410" y="408" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="427" y="420" text-anchor="middle" font-size="9" font-weight="bold" fill="#ffe66d">C</text>
+                            <rect x="445" y="408" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="465" y="420" text-anchor="middle" font-size="8">0.53</text>
+                            <rect x="485" y="408" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="505" y="420" text-anchor="middle" font-size="8">-5.19</text>
+                            <rect x="525" y="408" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="545" y="420" text-anchor="middle" font-size="8">0</text>
+                            
+                            <rect x="410" y="426" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="427" y="438" text-anchor="middle" font-size="9" font-weight="bold" fill="#ff8cc8">E</text>
+                            <rect x="445" y="426" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="465" y="438" text-anchor="middle" font-size="8">-0.02</text>
+                            <rect x="485" y="426" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="505" y="438" text-anchor="middle" font-size="8">-4.19</text>
+                            <rect x="525" y="426" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="545" y="438" text-anchor="middle" font-size="8">1</text>
+                            
+                            <rect x="410" y="444" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="427" y="456" text-anchor="middle" font-size="9" font-weight="bold" fill="#ff6b6b">A</text>
+                            <rect x="445" y="444" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="465" y="456" text-anchor="middle" font-size="8">0.36</text>
+                            <rect x="485" y="444" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="505" y="456" text-anchor="middle" font-size="8">-5.31</text>
+                            <rect x="525" y="444" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="545" y="456" text-anchor="middle" font-size="8">0</text>
+                            
+                            <rect x="410" y="462" width="35" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="427" y="474" text-anchor="middle" font-size="9" font-weight="bold" fill="#ff8cc8">E</text>
+                            <rect x="445" y="462" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="465" y="474" text-anchor="middle" font-size="8">-0.02</text>
+                            <rect x="485" y="462" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="505" y="474" text-anchor="middle" font-size="8">-4.19</text>
+                            <rect x="525" y="462" width="40" height="18" fill="white" stroke="#333" stroke-width="1"/>
+                            <text x="545" y="474" text-anchor="middle" font-size="8">1</text>
+                        </g>
+                        
+                        <!-- 설명 박스 -->
+                        <rect x="50" y="495" width="650" height="40" fill="#fff3cd" stroke="#ffc107" stroke-width="2" rx="5"/>
+                        <text x="375" y="510" text-anchor="middle" font-size="12" font-weight="bold" fill="#856404">
+                            그래서 나온게 Random Forest: Bootstrap 샘플링 + Random Feature Selection
+                        </text>
+                        <text x="375" y="527" text-anchor="middle" font-size="11" fill="#666">
+                            각 트리마다 다른 데이터 (Bootstrap) + 다른 특성 조합 (Random Feature) → 다양한 트리들의 숲
+                        </text>
+                        
+                        <defs>
+                            <marker id="arrowhead2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#667eea"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+                
+                <div class="success-box">
+                    <h4>Random Forest의 핵심</h4>
+                    <p><strong>이중 무작위성(Double Randomness)</strong>으로 트리들 간의 상관관계를 크게 감소시킵니다:</p>
+                    <ul>
+                        <li><strong>데이터 차원:</strong> Bootstrap 샘플링으로 각 트리가 다른 데이터 부분집합 학습</li>
+                        <li><strong>특성 차원:</strong> 각 노드에서 무작위로 선택된 특성 부분집합만 고려</li>
+                    </ul>
+                    <p>→ 매우 다양한 트리들이 생성되어 강력한 앙상블 형성!</p>
+                </div>
+            </div>
+
+            <!-- 슬라이드 18: Feature Randomness 과정 -->
+            <div class="slide">
+                <h2>Feature Randomness: 특성을 무작위로 선택하는 과정</h2>
+                
+                <h3>Random Forest의 핵심 혁신</h3>
+                <div class="box">
+                    <p>각 노드에서 분할을 결정할 때:</p>
+                    <ol>
+                        <li>전체 p개 특성 중 m개를 <strong>무작위로 선택</strong> (m << p)</li>
+                        <li>선택된 m개 특성 중에서만 최적 분할 찾기</li>
+                        <li>다음 노드에서는 다시 새로운 m개 특성 선택</li>
+                    </ol>
+                </div>
+
+                <table>
+                    <tr>
+                        <th>트리</th>
+                        <th>노드</th>
+                        <th>전체 특성 (12개)</th>
+                        <th>무작위 선택 (4개)</th>
+                        <th>최종 선택</th>
+                    </tr>
+                    <tr>
+                        <td rowspan="3">Tree 1</td>
+                        <td>Root</td>
+                        <td>F₁~F₁₂</td>
+                        <td style="background: #fff3cd;">[F₂, F₅, F₇, F₁₁]</td>
+                        <td style="background: #e8f5e9;">F₅</td>
+                    </tr>
+                    <tr>
+                        <td>Left Child</td>
+                        <td>F₁~F₁₂</td>
+                        <td style="background: #fff3cd;">[F₁, F₃, F₉, F₁₂]</td>
+                        <td style="background: #e8f5e9;">F₃</td>
+                    </tr>
+                    <tr>
+                        <td>Right Child</td>
+                        <td>F₁~F₁₂</td>
+                        <td style="background: #fff3cd;">[F₄, F₆, F₈, F₁₀]</td>
+                        <td style="background: #e8f5e9;">F₁₀</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3">Tree 2</td>
+                        <td>Root</td>
+                        <td>F₁~F₁₂</td>
+                        <td style="background: #fff3cd;">[F₃, F₆, F₈, F₉]</td>
+                        <td style="background: #e3f2fd;">F₈</td>
+                    </tr>
+                    <tr>
+                        <td>Left Child</td>
+                        <td>F₁~F₁₂</td>
+                        <td style="background: #fff3cd;">[F₂, F₄, F₇, F₁₁]</td>
+                        <td style="background: #e3f2fd;">F₂</td>
+                    </tr>
+                    <tr>
+                        <td>Right Child</td>
+                        <td>F₁~F₁₂</td>
+                        <td style="background: #fff3cd;">[F₁, F₅, F₁₀, F₁₂]</td>
+                        <td style="background: #e3f2fd;">F₁</td>
+                    </tr>
+                </table>
+
+                <div class="warning-box">
+                    <h4>핵심 포인트</h4>
+                    <ul>
+                        <li>같은 노드 위치라도 트리마다 다른 특성 선택</li>
+                        <li>강한 예측 변수가 모든 트리에서 사용되지 않음</li>
+                        <li>약한 예측 변수도 기회를 얻음</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 슬라이드 19: Aggregation 시각화 -->
+            <div class="slide">
+                <h2>Random Forest의 Aggregation: 다양한 트리들의 투표</h2>
+                
+                <div class="visualization-container">
+                    <svg width="750" height="450" viewBox="0 0 750 450">
+                        <text x="375" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#333">
+                            서로 다른 관점을 가진 트리들의 예측 결합
+                        </text>
+                        
+                        <!-- 새로운 샘플 -->
+                        <rect x="320" y="60" width="110" height="40" fill="#ffebee" stroke="#f44336" stroke-width="2" rx="5"/>
+                        <text x="375" y="85" text-anchor="middle" font-size="12">새 샘플 X</text>
+                        
+                        <!-- 화살표들 -->
+                        <path d="M 320 100 L 150 150" stroke="#666" stroke-width="1" marker-end="url(#arrow)"/>
+                        <path d="M 350 100 L 250 150" stroke="#666" stroke-width="1" marker-end="url(#arrow)"/>
+                        <path d="M 375 100 L 375 150" stroke="#666" stroke-width="1" marker-end="url(#arrow)"/>
+                        <path d="M 400 100 L 500 150" stroke="#666" stroke-width="1" marker-end="url(#arrow)"/>
+                        <path d="M 430 100 L 600 150" stroke="#666" stroke-width="1" marker-end="url(#arrow)"/>
+                        
+                        <!-- 트리들의 예측 -->
+                        <g id="predictions">
+                            <!-- Tree 1 (다른 특성 사용) -->
+                            <rect x="100" y="150" width="100" height="60" fill="#e3f2fd" stroke="#2196f3" stroke-width="1" rx="3"/>
+                            <text x="150" y="170" text-anchor="middle" font-size="10">Tree 1 (F₂, F₅)</text>
+                            <text x="150" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#2196f3">Class A</text>
+                            
+                            <!-- Tree 2 -->
+                            <rect x="200" y="150" width="100" height="60" fill="#f3e5f5" stroke="#9c27b0" stroke-width="1" rx="3"/>
+                            <text x="250" y="170" text-anchor="middle" font-size="10">Tree 2 (F₁, F₈)</text>
+                            <text x="250" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#9c27b0">Class B</text>
+                            
+                            <!-- Tree 3 -->
+                            <rect x="325" y="150" width="100" height="60" fill="#e8f5e9" stroke="#4caf50" stroke-width="1" rx="3"/>
+                            <text x="375" y="170" text-anchor="middle" font-size="10">Tree 3 (F₃, F₇)</text>
+                            <text x="375" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#4caf50">Class A</text>
+                            
+                            <!-- Tree 4 -->
+                            <rect x="450" y="150" width="100" height="60" fill="#fff3cd" stroke="#ffc107" stroke-width="1" rx="3"/>
+                            <text x="500" y="170" text-anchor="middle" font-size="10">Tree 4 (F₄, F₉)</text>
+                            <text x="500" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#ff9800">Class A</text>
+                            
+                            <!-- Tree 5 -->
+                            <rect x="550" y="150" width="100" height="60" fill="#ffebee" stroke="#dc3545" stroke-width="1" rx="3"/>
+                            <text x="600" y="170" text-anchor="middle" font-size="10">Tree 5 (F₆, F₁₀)</text>
+                            <text x="600" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#dc3545">Class B</text>
+                        </g>
+                        
+                        <!-- 화살표 (결합) -->
+                        <path d="M 150 210 L 375 260" stroke="#666" stroke-width="1" marker-end="url(#arrow)"/>
+                        <path d="M 250 210 L 375 260" stroke="#666" stroke-width="1" marker-end="url(#arrow)"/>
+                        <path d="M 375 210 L 375 260" stroke="#666" stroke-width="1" marker-end="url(#arrow)"/>
+                        <path d="M 500 210 L 375 260" stroke="#666" stroke-width="1" marker-end="url(#arrow)"/>
+                        <path d="M 600 210 L 375 260" stroke="#666" stroke-width="1" marker-end="url(#arrow)"/>
+                        
+                        <!-- 투표 결과 -->
+                        <rect x="275" y="270" width="200" height="80" fill="#e8f5e9" stroke="#4caf50" stroke-width="2" rx="5"/>
+                        <text x="375" y="295" text-anchor="middle" font-size="12" font-weight="bold">투표 결과</text>
+                        <text x="375" y="315" text-anchor="middle" font-size="11" fill="#666">Class A: 3표 (60%)</text>
+                        <text x="375" y="332" text-anchor="middle" font-size="11" fill="#666">Class B: 2표 (40%)</text>
+                        
+                        <!-- 최종 예측 -->
+                        <rect x="300" y="370" width="150" height="50" fill="#667eea" stroke="#5568d3" stroke-width="2" rx="5"/>
+                        <text x="375" y="390" text-anchor="middle" font-size="12" fill="white">최종 예측</text>
+                        <text x="375" y="408" text-anchor="middle" font-size="16" font-weight="bold" fill="white">Class A</text>
+                        
+                        <defs>
+                            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#666"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+                
+                <div class="box">
+                    <p>각 트리가 다른 특성을 사용하므로 다양한 관점에서 예측!</p>
+                </div>
+            </div>
+
+            <!-- 슬라이드 20: max_features 파라미터 -->
+            <div class="slide">
+                <h2>max_features 파라미터: 수학적 근거</h2>
+                
+                <h3>각 노드에서 고려할 특성 개수</h3>
+                <table>
+                    <tr>
+                        <th>설정값</th>
+                        <th>의미</th>
+                        <th>권장 사용 경우</th>
+                    </tr>
+                    <tr>
+                        <td>'sqrt' 또는 'auto'</td>
+                        <td>√p (제곱근)</td>
+                        <td>분류 문제 (기본값)</td>
+                    </tr>
+                    <tr>
+                        <td>0.33 또는 p/3</td>
+                        <td>전체의 1/3</td>
+                        <td>회귀 문제</td>
+                    </tr>
+                    <tr>
+                        <td>'log2'</td>
+                        <td>log₂(p)</td>
+                        <td>특성이 매우 많을 때</td>
+                    </tr>
+                    <tr>
+                        <td>None 또는 1.0</td>
+                        <td>모든 특성</td>
+                        <td>일반 Bagging</td>
+                    </tr>
+                    <tr>
+                        <td>정수 (예: 10)</td>
+                        <td>정확히 10개</td>
+                        <td>직접 지정</td>
+                    </tr>
+                </table>
+
+                <div class="formula">
+                    <strong>수학적 근거</strong><br><br>
+                    분류 문제에서 √p를 사용하는 이유:<br>
+                    • 충분한 다양성 확보 (상관관계 ↓)<br>
+                    • 개별 트리 성능 유지<br>
+                    • 계산 효율성<br><br>
+                    최적값 = argmin(ρσ² + (1-ρ)σ²/M)
+                </div>
+
+                <div class="example-box">
+                    <h3>예시: 100개 특성이 있을 때</h3>
+                    <ul>
+                        <li><strong>sqrt:</strong> √100 = 10개 특성</li>
+                        <li><strong>0.33:</strong> 100 × 0.33 = 33개 특성</li>
+                        <li><strong>log2:</strong> log₂(100) ≈ 7개 특성</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 슬라이드 21: 하이퍼파라미터 - 트리 개수 -->
+            <div class="slide">
+                <h2>Random Forest 하이퍼파라미터 1: 트리 개수</h2>
+                
+                <h3>n_estimators: 몇 개의 트리를 사용할까?</h3>
+                
+                <div class="box">
+                    <h4>일반적인 권장 사항</h4>
+                    <ul>
+                        <li><strong>기본값:</strong> 100개 (scikit-learn 기본값)</li>
+                        <li><strong>실무 권장:</strong> 100~500개</li>
+                        <li><strong>대규모 데이터:</strong> 500~1000개</li>
+                    </ul>
+                </div>
+
+                <div class="warning-box">
+                    <h4>Trade-off 고려사항</h4>
+                    <table>
+                        <tr>
+                            <th>트리 개수</th>
+                            <th>장점</th>
+                            <th>단점</th>
+                        </tr>
+                        <tr>
+                            <td>적음 (10~50)</td>
+                            <td>• 빠른 학습<br>• 적은 메모리</td>
+                            <td>• 불안정한 예측<br>• 낮은 정확도</td>
+                        </tr>
+                        <tr>
+                            <td>보통 (100~300)</td>
+                            <td>• 안정적 성능<br>• 적절한 속도</td>
+                            <td>• 중간 수준 리소스</td>
+                        </tr>
+                        <tr>
+                            <td>많음 (500+)</td>
+                            <td>• 최고 정확도<br>• 매우 안정적</td>
+                            <td>• 느린 학습/예측<br>• 많은 메모리</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="success-box">
+                    <p><strong>경험 법칙:</strong> OOB Score가 수렴할 때까지 늘리되, 
+                    보통 100~200개에서 수렴합니다.</p>
+                </div>
+            </div>
+
+            <!-- 슬라이드 22: 하이퍼파라미터 - 트리 깊이 -->
+            <div class="slide">
+                <h2>Random Forest 하이퍼파라미터 2: 트리 깊이</h2>
+                
+                <h3>개별 트리의 복잡도 제어</h3>
+                
+                <div class="box">
+                    <h4>주요 파라미터</h4>
+                    <ul>
+                        <li><strong>max_depth:</strong> 트리의 최대 깊이</li>
+                        <li><strong>min_samples_split:</strong> 노드 분할 최소 샘플 수</li>
+                        <li><strong>min_samples_leaf:</strong> 리프 노드 최소 샘플 수</li>
+                    </ul>
+                </div>
+
+                <table>
+                    <tr>
+                        <th>파라미터</th>
+                        <th>기본값</th>
+                        <th>과적합 시</th>
+                        <th>과소적합 시</th>
+                    </tr>
+                    <tr>
+                        <td>max_depth</td>
+                        <td>None (무제한)</td>
+                        <td>10~20으로 제한</td>
+                        <td>None 유지</td>
+                    </tr>
+                    <tr>
+                        <td>min_samples_split</td>
+                        <td>2</td>
+                        <td>5~10 증가</td>
+                        <td>2 유지</td>
+                    </tr>
+                    <tr>
+                        <td>min_samples_leaf</td>
+                        <td>1</td>
+                        <td>2~5 증가</td>
+                        <td>1 유지</td>
+                    </tr>
+                </table>
+
+                <div class="warning-box">
+                    <h4>Random Forest의 특별함</h4>
+                    <p>일반적으로 Random Forest는 개별 트리의 과적합을 걱정하지 않습니다!</p>
+                    <ul>
+                        <li>깊은 트리 = 낮은 편향 (bias)</li>
+                        <li>많은 트리 + 무작위성 = 분산 감소</li>
+                        <li>결과: 과적합에 강건한 모델</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 슬라이드 23: Random Forest 구현 -->
+            <div class="slide">
+                <h2>Random Forest 사용하기</h2>
+                
+                <div class="code-section">
+                    <h3>기본 사용법</h3>
+                    <pre><code>from sklearn.ensemble import RandomForestClassifier
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+
+# 데이터 준비
+iris = load_iris()
+X, y = iris.data, iris.target
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+# Random Forest 생성
+rf = RandomForestClassifier(
+    n_estimators=100,        # 트리 개수
+    max_features='sqrt',     # 각 노드에서 √p개 특성 고려
+    max_depth=None,          # 트리를 끝까지 성장
+    min_samples_split=2,     # 노드 분할 최소 샘플
+    min_samples_leaf=1,      # 리프 노드 최소 샘플
+    bootstrap=True,          # Bootstrap 샘플링 사용
+    oob_score=True,          # OOB score 계산
+    n_jobs=-1,               # 모든 CPU 코어 사용
+    random_state=42
+)
+
+# 학습
+rf.fit(X_train, y_train)
+
+# 평가
+train_score = rf.score(X_train, y_train)
+test_score = rf.score(X_test, y_test)
+oob_score = rf.oob_score_
+
+print("Random Forest 성능")
+print("="*40)
+print(f"훈련 정확도: {train_score:.4f}")
+print(f"테스트 정확도: {test_score:.4f}")
+print(f"OOB 점수: {oob_score:.4f}")
+print(f"사용된 특성 수: {rf.n_features_}")
+print(f"클래스: {rf.classes_}")</code></pre>
+                </div>
+            </div>
+
+            <!-- 슬라이드 24: Feature Importance -->
+            <div class="slide">
+                <h2>Feature Importance 이해하기</h2>
+                
+                <h3>변수 중요도란?</h3>
+                <div class="box">
+                    <p>각 특성이 예측에 얼마나 기여하는지를 나타내는 지표</p>
+                    <p>트리를 분할할 때 불순도를 얼마나 감소시키는지로 계산</p>
+                </div>
+
+                <div class="code-section">
+                    <h3>Feature Importance 추출 및 시각화</h3>
+                    <pre><code>import matplotlib.pyplot as plt
+import numpy as np
+
+# Feature Importance 추출
+feature_importances = rf.feature_importances_
+feature_names = iris.feature_names
+
+# 중요도 순으로 정렬
+indices = np.argsort(feature_importances)[::-1]
+
+# 출력
+print("Feature Importance Ranking:")
+print("="*40)
+for i in range(len(feature_names)):
+    print(f"{i+1}. {feature_names[indices[i]]}: {feature_importances[indices[i]]:.4f}")
+
+# 시각화
+plt.figure(figsize=(10, 6))
+plt.title('Feature Importances in Random Forest')
+plt.bar(range(len(feature_names)), feature_importances[indices])
+plt.xticks(range(len(feature_names)), [feature_names[i] for i in indices], rotation=45)
+plt.xlabel('Features')
+plt.ylabel('Importance')
+plt.tight_layout()
+plt.show()
+
+# 누적 중요도
+cumsum = np.cumsum(feature_importances[indices])
+plt.figure(figsize=(10, 6))
+plt.plot(cumsum)
+plt.xlabel('Number of Features')
+plt.ylabel('Cumulative Importance')
+plt.title('Cumulative Feature Importance')
+plt.axhline(y=0.95, color='r', linestyle='--', label='95% threshold')
+plt.legend()
+plt.show()
+
+# 상위 N개 특성으로 충분한지 확인
+n_important = np.where(cumsum >= 0.95)[0][0] + 1
+print(f"\n상위 {n_important}개 특성으로 95% 설명력 달성")</code></pre>
+                </div>
+            </div>
+
+            <!-- 슬라이드 25: n_estimators 효과 -->
+            <div class="slide">
+                <h2>트리 개수(n_estimators)의 효과</h2>
+                
+                <div class="code-section">
+                    <h3>최적 트리 개수 찾기</h3>
+                    <pre><code>import time
+
+# 다양한 n_estimators로 실험
+n_trees = [1, 5, 10, 25, 50, 100, 200, 500]
+train_scores = []
+test_scores = []
+oob_scores = []
+times = []
+
+for n in n_trees:
+    start = time.time()
+    
+    rf = RandomForestClassifier(
+        n_estimators=n,
+        max_features='sqrt',
+        oob_score=True,
+        random_state=42,
+        n_jobs=-1
+    )
+    rf.fit(X_train, y_train)
+    
+    train_scores.append(rf.score(X_train, y_train))
+    test_scores.append(rf.score(X_test, y_test))
+    oob_scores.append(rf.oob_score_)
+    times.append(time.time() - start)
+    
+    print(f"Trees={n:3d}: Train={train_scores[-1]:.3f}, "
+          f"Test={test_scores[-1]:.3f}, OOB={oob_scores[-1]:.3f}, "
+          f"Time={times[-1]:.2f}s")
+
+# 시각화
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# 성능 그래프
+ax1.plot(n_trees, train_scores, 'o-', label='Train', color='blue')
+ax1.plot(n_trees, test_scores, 's-', label='Test', color='green')
+ax1.plot(n_trees, oob_scores, '^-', label='OOB', color='red')
+ax1.set_xlabel('Number of Trees')
+ax1.set_ylabel('Accuracy')
+ax1.set_title('Performance vs Number of Trees')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# 시간 그래프
+ax2.plot(n_trees, times, 'o-', color='orange')
+ax2.set_xlabel('Number of Trees')
+ax2.set_ylabel('Training Time (seconds)')
+ax2.set_title('Training Time vs Number of Trees')
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+# 권장사항
+print("\n권장사항:")
+print("- 100-200개 트리에서 성능이 수렴")
+print("- 더 많은 트리 = 선형적으로 증가하는 시간")
+print("- 실무에서는 100-500개 사용")</code></pre>
+                </div>
+            </div>
+
+            <!-- 슬라이드 26: 하이퍼파라미터 튜닝 -->
+            <div class="slide">
+                <h2>Random Forest 하이퍼파라미터 튜닝</h2>
+                
+                <div class="code-section">
+                    <h3>Grid Search로 최적 파라미터 찾기</h3>
+                    <pre><code>from sklearn.model_selection import GridSearchCV
+
+# 파라미터 그리드 정의
+param_grid = {
+    'n_estimators': [50, 100, 200],
+    'max_features': ['sqrt', 'log2', 0.33],
+    'max_depth': [10, 20, None],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4]
+}
+
+# Grid Search
+grid_search = GridSearchCV(
+    RandomForestClassifier(random_state=42),
+    param_grid,
+    cv=5,                    # 5-fold cross validation
+    scoring='accuracy',      # 평가 지표
+    n_jobs=-1,              # 병렬 처리
+    verbose=1               # 진행 상황 출력
+)
+
+# 학습
+print("Grid Search 시작...")
+grid_search.fit(X_train, y_train)
+
+# 결과
+print("\n최적 파라미터:")
+print(grid_search.best_params_)
+print(f"\n최적 CV 점수: {grid_search.best_score_:.4f}")
+
+# 최적 모델로 테스트
+best_rf = grid_search.best_estimator_
+test_score = best_rf.score(X_test, y_test)
+print(f"테스트 점수: {test_score:.4f}")
+
+# 파라미터 중요도 분석
+results = pd.DataFrame(grid_search.cv_results_)
+important_params = ['param_n_estimators', 'param_max_features', 
+                   'param_max_depth', 'mean_test_score']
+print("\n상위 5개 조합:")
+print(results[important_params].nlargest(5, 'mean_test_score'))</code></pre>
+                </div>
+            </div>
+
+            <!-- 슬라이드 27: 실전 예제 -->
+            <div class="slide">
+                <h2>실전 예제: 와인 품질 예측</h2>
+                
+                <div class="code-section">
+                    <h3>완전한 Random Forest 파이프라인</h3>
+                    <pre><code>from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report, confusion_matrix
+import pandas as pd
+import numpy as np
+
+# 1. 데이터 로드
+from sklearn.datasets import load_wine
+wine = load_wine()
+X, y = wine.data, wine.target
+feature_names = wine.feature_names
+
+# 2. 데이터 분할
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42, stratify=y
+)
+
+print(f"데이터 shape: {X.shape}")
+print(f"훈련 세트: {X_train.shape}, 테스트 세트: {X_test.shape}")
+print(f"클래스: {wine.target_names}")
+
+# 3. Random Forest 모델 생성 (스케일링 불필요!)
+rf_wine = RandomForestClassifier(
+    n_estimators=200,
+    max_features='sqrt',
+    max_depth=None,
+    min_samples_split=2,
+    min_samples_leaf=1,
+    oob_score=True,
+    n_jobs=-1,
+    random_state=42
+)
+
+# 4. 학습
+rf_wine.fit(X_train, y_train)
+
+# 5. 예측
+y_pred = rf_wine.predict(X_test)
+y_proba = rf_wine.predict_proba(X_test)
+
+# 6. 평가
+print("\n" + "="*50)
+print("모델 평가 결과")
+print("="*50)
+
+# 정확도
+train_acc = rf_wine.score(X_train, y_train)
+test_acc = rf_wine.score(X_test, y_test)
+oob_acc = rf_wine.oob_score_
+
+print(f"훈련 정확도: {train_acc:.4f}")
+print(f"테스트 정확도: {test_acc:.4f}")
+print(f"OOB 정확도: {oob_acc:.4f}")
+
+# Classification Report
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, target_names=wine.target_names))
+
+# Confusion Matrix
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+# 7. Feature Importance 분석
+importances = rf_wine.feature_importances_
+indices = np.argsort(importances)[::-1]
+
+print("\n" + "="*50)
+print("Feature Importance")
+print("="*50)
+for i in range(min(10, len(feature_names))):
+    print(f"{i+1:2d}. {feature_names[indices[i]]:25s}: {importances[indices[i]]:.4f}")
+
+# 8. Cross Validation
+cv_scores = cross_val_score(rf_wine, X, y, cv=5)
+print(f"\n5-Fold CV: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")</code></pre>
+                </div>
+            </div>
+
+            <!-- 슬라이드 28: 사용 시 고려사항 -->
+            <div class="slide">
+                <h2>Random Forest 사용 시 고려사항</h2>
+                
+                <h3>장점과 한계</h3>
+                
+                <div class="success-box">
+                    <h4>Random Forest의 강점</h4>
+                    <ul>
+                        <li>과적합에 매우 강함</li>
+                        <li>하이퍼파라미터 튜닝이 상대적으로 쉬움</li>
+                        <li>Feature Importance 제공</li>
+                        <li>결측치 처리 가능 (일부 구현)</li>
+                        <li>이상치에 강건함</li>
+                        <li>병렬 처리로 빠른 학습</li>
+                        <li>스케일링 불필요</li>
+                    </ul>
+                </div>
+
+                <div class="danger-box">
+                    <h4>Random Forest의 한계</h4>
+                    <ul>
+                        <li>메모리 사용량이 많음 (모든 트리 저장)</li>
+                        <li>실시간 예측이 느릴 수 있음</li>
+                        <li>선형 관계에는 비효율적</li>
+                        <li>고차원 희소 데이터에 약함</li>
+                        <li>해석이 어려움 (Black Box)</li>
+                        <li>외삽(Extrapolation) 불가능</li>
+                    </ul>
+                </div>
+
+                <div class="warning-box">
+                    <h4>언제 사용할까?</h4>
+                    <ul>
+                        <li>베이스라인 모델이 필요할 때</li>
+                        <li>과적합이 우려될 때</li>
+                        <li>특별한 튜닝 없이 좋은 성능을 원할 때</li>
+                        <li>Feature Importance가 필요할 때</li>
+                        <li>병렬 처리가 가능한 환경일 때</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 슬라이드 29: Random Forest vs 다른 모델 -->
+            <div class="slide">
+                <h2>Random Forest vs 다른 알고리즘</h2>
+                
+                <table>
+                    <tr>
+                        <th>특성</th>
+                        <th>Random Forest</th>
+                        <th>Decision Tree</th>
+                        <th>XGBoost</th>
+                    </tr>
+                    <tr>
+                        <td>과적합</td>
+                        <td>낮음 ✅</td>
+                        <td>높음 ❌</td>
+                        <td>중간 ⚠️</td>
+                    </tr>
+                    <tr>
+                        <td>해석 가능성</td>
+                        <td>중간 (Feature Importance)</td>
+                        <td>높음 ✅</td>
+                        <td>낮음 ❌</td>
+                    </tr>
+                    <tr>
+                        <td>학습 속도</td>
+                        <td>빠름 (병렬)</td>
+                        <td>매우 빠름</td>
+                        <td>느림</td>
+                    </tr>
+                    <tr>
+                        <td>예측 속도</td>
+                        <td>중간</td>
+                        <td>매우 빠름</td>
+                        <td>빠름</td>
+                    </tr>
+                    <tr>
+                        <td>메모리 사용</td>
+                        <td>많음 ❌</td>
+                        <td>적음 ✅</td>
+                        <td>중간</td>
+                    </tr>
+                    <tr>
+                        <td>정확도</td>
+                        <td>높음</td>
+                        <td>낮음</td>
+                        <td>매우 높음 ✅</td>
+                    </tr>
+                    <tr>
+                        <td>스케일링 필요</td>
+                        <td>불필요 ✅</td>
+                        <td>불필요 ✅</td>
+                        <td>불필요 ✅</td>
+                    </tr>
+                </table>
+
+                <div class="box">
+                    <h4>선택 가이드</h4>
+                    <ul>
+                        <li><strong>Random Forest:</strong> 안정적인 베이스라인, 빠른 프로토타이핑</li>
+                        <li><strong>XGBoost:</strong> 최고 성능이 필요할 때, 대회용</li>
+                        <li><strong>Decision Tree:</strong> 해석이 중요할 때, 규칙 추출</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 슬라이드 30: 실무 팁 -->
+            <div class="slide">
+                <h2>Random Forest 실무 팁</h2>
+                
+                <div class="box">
+                    <h3>실무에서 자주 사용하는 설정</h3>
+                    <pre><code># 실무 최적 설정
+rf_practical = RandomForestClassifier(
+    n_estimators=200,        # 100-300 사이
+    max_features='sqrt',     # 분류는 sqrt
+    max_depth=None,          # 제한 없음 (RF는 과적합에 강함)
+    min_samples_leaf=5,      # 약간의 정규화
+    oob_score=True,          # 무료 검증!
+    n_jobs=-1,               # 모든 코어 사용
+    random_state=42
+)</code></pre>
+                </div>
+
+                <div class="warning-box">
+                    <h3>주의사항</h3>
+                    <ul>
+                        <li><strong>메모리:</strong> 트리를 모두 저장하므로 메모리 사용량 체크</li>
+                        <li><strong>범주형 변수:</strong> One-hot encoding 필요</li>
+                        <li><strong>불균형 데이터:</strong> class_weight='balanced' 사용</li>
+                        <li><strong>시계열:</strong> 시간 순서 고려 안함 → 부적합</li>
+                    </ul>
+                </div>
+
+                <div class="success-box">
+                    <h3>체크리스트</h3>
+                    <ol>
+                        <li>결측치 처리했는가?</li>
+                        <li>범주형 변수 인코딩했는가?</li>
+                        <li>OOB Score 확인했는가?</li>
+                        <li>Feature Importance 확인했는가?</li>
+                        <li>n_estimators가 충분한가? (100+)</li>
+                        <li>과적합 징후는 없는가?</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- 슬라이드 31: 요약 -->
+            <div class="slide">
+                <h2>핵심 요약</h2>
+                
+                <div class="box">
+                    <h3>Bagging의 핵심</h3>
+                    <ul>
+                        <li><strong>Bootstrap:</strong> 복원 추출로 다양한 데이터셋 생성</li>
+                        <li><strong>Aggregating:</strong> 여러 모델의 예측을 결합</li>
+                        <li><strong>효과:</strong> 분산 감소, 과적합 방지</li>
+                        <li><strong>OOB:</strong> 36.8%의 무료 검증 데이터</li>
+                    </ul>
+                </div>
+
+                <div class="box">
+                    <h3>Random Forest의 핵심</h3>
+                    <ul>
+                        <li><strong>Tree → Forest:</strong> 개별 나무가 모여 강력한 숲 형성</li>
+                        <li><strong>이중 무작위성:</strong> Bootstrap + Feature Randomness</li>
+                        <li><strong>트리 간 상관관계 감소:</strong> 다양성 극대화</li>
+                        <li><strong>max_features:</strong> √p (분류), p/3 (회귀)</li>
+                    </ul>
+                </div>
+
+                <div class="formula">
+                    기억할 공식:<br>
+                    • OOB 비율 ≈ e⁻¹ ≈ 36.8%<br>
+                    • Var(앙상블) = Var(개별) / n_models<br>
+                    • 앙상블 분산 = ρσ² + (1-ρ)σ²/M<br>
+                    • 최적 특성 수 = √p (분류)
+                </div>
+            </div>
+            <div class="slide">
+                
+                <h2>실습 과제</h2>
+
+                    <div class="box" style="margin-bottom: 15px;">
+                    <h4>과제 1: Bagging vs Random Forest 성능 비교</h4>
+                    <p>유방암 데이터를 사용해 단일 트리, Bagging, Random Forest의 성능을 비교하기</p>
+                    <ul>
+                        <li>데이터: <code>sklearn.datasets.load_breast_cancer()</code></li>
+                        <li>모델 비교:
+                        <ul>
+                            <li>단일 <code>DecisionTreeClassifier</code></li>
+                            <li><code>BaggingClassifier</code> (100 trees)</li>
+                            <li><code>RandomForestClassifier</code> (100 trees)</li>
+                        </ul>
+                        </li>
+                        <li>평가 지표: 정확도, OOB 점수</li>
+                    </ul>
+                    </div>
+                </div>
+        </div>
+
+        <div class="controls">
+            <div class="navigation">
+                <button id="prevBtn">← 이전</button>
+                <span class="slide-counter">
+                    <span id="currentSlide">1</span> / <span id="totalSlides">32</span>
+                </span>
+                <button id="nextBtn">다음 →</button>
+            </div>
+            <div>
+                <input type="number" id="pageInput" min="1" placeholder="페이지">
+                <button id="goBtn">이동</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentSlideSpan = document.getElementById('currentSlide');
+        const totalSlidesSpan = document.getElementById('totalSlides');
+        const pageInput = document.getElementById('pageInput');
+        const goBtn = document.getElementById('goBtn');
+        
+        let currentSlide = 0;
+        
+        totalSlidesSpan.textContent = slides.length;
+        pageInput.max = slides.length;
+        
+        function showSlide(n) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            
+            if (n >= slides.length) {
+                currentSlide = slides.length - 1;
+            } else if (n < 0) {
+                currentSlide = 0;
+            } else {
+                currentSlide = n;
+            }
+            
+            slides[currentSlide].classList.add('active');
+            currentSlideSpan.textContent = currentSlide + 1;
+            
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+            
+            document.getElementById('slidesContainer').scrollTop = 0;
+        }
+        
+        prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+        nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+        
+        goBtn.addEventListener('click', () => {
+            const page = parseInt(pageInput.value) - 1;
+            if (page >= 0 && page < slides.length) {
+                showSlide(page);
+            }
+        });
+        
+        pageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                goBtn.click();
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && !prevBtn.disabled) {
+                prevBtn.click();
+            } else if (e.key === 'ArrowRight' && !nextBtn.disabled) {
+                nextBtn.click();
+            } else if (e.key === 'Home') {
+                showSlide(0);
+            } else if (e.key === 'End') {
+                showSlide(slides.length - 1);
+            }
+        });
+        
+        showSlide(0);
+    </script>
+</body>
+</html>

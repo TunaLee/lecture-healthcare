@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>머신러닝 심화 - 1일차</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .slide {
+            padding: 60px;
+            min-height: 600px;
+            display: none;
+        }
+
+        .slide.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        h4 {
+            font-size: 20px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 24px;
+            color: #888;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .comparison-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .example-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .center-text {
+            text-align: center;
+            font-size: 20px;
+            margin: 30px 0;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #ffd93d 0%, #ffd93d 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 40%;
+            background-position: 0 80%;
+            padding: 2px 5px;
+            font-weight: bold;
+        }
+
+        .formula {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 20px;
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        code {
+            background: #2c3e50;
+            color: #ffd93d;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        pre {
+            background: #2c3e50;
+            color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            font-size: 18px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .page-jump {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .page-jump input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .page-jump button {
+            padding: 8px 16px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .controls {
+                display: none !important;
+            }
+            .slide {
+                display: block !important;
+                page-break-after: always;
+                min-height: auto;
+            }
+            .slide:last-child {
+                page-break-after: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 30px 20px;
+                min-height: 400px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+
+            .comparison-box {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px 20px;
+            }
+
+            .navigation {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .page-jump {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="slidesContainer"></div>
+        
+        <div class="controls">
+            <div class="navigation">
+                <button id="prevBtn">← 이전</button>
+                <span class="slide-counter">
+                    <span id="currentSlide">1</span> / <span id="totalSlides">0</span>
+                </span>
+                <button id="nextBtn">다음 →</button>
+            </div>
+            <div class="page-jump">
+                <span style="font-size: 16px; color: #666;">페이지로 이동:</span>
+                <input type="number" id="pageInput" min="1" placeholder="번호">
+                <button id="jumpBtn">이동</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slidesHTML = `<h1>머신러닝 심화</h1><p class="subtitle">1일차 - 피처 엔지니어링 (Feature Engineering)</p><div style="text-align: center; margin-top: 80px;"><p style="font-size: 26px; color: #667eea; font-weight: bold;">"데이터를 요리하는 기술"</p><p style="font-size: 20px; color: #666; margin-top: 40px;">Feature Generation, Selection, 이상치 탐지</p></div>
+===SPLIT===
+<h2>1일차 학습 목표</h2><div class="box" style="margin-bottom: 15px;"><h4>Feature Generation</h4><p>새로운 피처 만들기 - Binning, Polynomial</p></div><div class="box" style="margin-bottom: 15px;"><h4>Feature Selection</h4><p>중요한 피처 선택 - Filter, Wrapper, Embedded</p></div><div class="box" style="margin-bottom: 15px;"><h4>이상치 탐지</h4><p>데이터 속 이상한 값 찾기 - Z-Score, IQR, DBSCAN, LOF</p></div><div class="box"><h4>실전 활용</h4><p>실무에서 바로 쓸 수 있는 기법들</p></div>
+===SPLIT===
+<h2>왜 피처 엔지니어링이 필요한가?</h2><h3>현실 세계의 문제</h3><div class="warning-box"><p><strong>데이터 과학자들이 겪는 현실</strong></p><ul><li>모델 성능이 향상되지 않는다</li><li>중요한 패턴이 숨겨져 있다</li><li>불필요한 피처가 너무 많다</li><li>이상한 데이터가 결과를 망친다</li></ul></div><div class="example-box"><p style="font-size: 20px; color: #667eea; font-weight: bold;">통계의 진실</p><p style="margin-top: 15px;">"데이터 과학자는 80%의 시간을 데이터 준비에,<br>20%의 시간만 모델링에 사용한다"</p></div><p class="center-text"><span class="highlight">좋은 피처 = 좋은 모델<br>피처 엔지니어링이 성능의 핵심입니다</span></p>
+===SPLIT===
+<h2>피처 엔지니어링이란?</h2><h3>데이터를 모델이 이해하기 쉽게 변환</h3><div class="comparison-box"><div class="box"><h4>Before</h4><p>❌ 원시 데이터(Raw Data)</p><p>❌ 복잡한 관계</p><p>❌ 불필요한 정보</p><p>❌ 이상치 포함</p></div><div class="box"><h4>After</h4><p>✅ 정제된 데이터</p><p>✅ 명확한 패턴</p><p>✅ 핵심 정보만</p><p>✅ 깨끗한 데이터</p></div></div><div class="success-box"><h4>피처 엔지니어링의 3가지 축</h4><p>1️⃣ <strong>Feature Generation:</strong> 새로운 피처 생성</p><p>2️⃣ <strong>Feature Selection:</strong> 중요한 피처 선택</p><p>3️⃣ <strong>Anomaly Detection:</strong> 이상치 제거</p></div>
+===SPLIT===
+<h2>Feature Generation: 왜 새로운 피처를 만들까?</h2><div class="warning-box"><p><strong>문제 상황</strong></p><p>나이 데이터가 [18, 19, 20, 65, 66, 67]처럼 있을 때</p><p>→ 모델이 "청년"과 "노년"의 차이를 학습하기 어렵다</p></div><div class="example-box"><p style="font-size: 20px; color: #667eea; font-weight: bold;">해결책</p><p style="margin-top: 15px;">연속형 변수를 범주로 묶자!</p><ul><li>18-30: 청년</li><li>31-50: 중년</li><li>51+: 노년</li></ul></div><div class="success-box"><p><strong>또 다른 예: 비선형 관계</strong></p><p>키와 몸무게의 관계는 선형이 아니다</p><p>→ 키², 키×몸무게 같은 새로운 피처로 표현!</p></div><p class="center-text"><span class="highlight">데이터에 숨겨진 패턴을<br>명시적으로 표현하는 것</span></p>
+===SPLIT===
+<h2>Binning (구간화)</h2><h3>연속형 변수를 범주로 변환</h3><div class="box" style="margin-bottom: 15px;"><h4>Equal Width Binning</h4><p>같은 너비로 구간 나누기</p><p>예: [0-25], [25-50], [50-75], [75-100]</p></div><div class="box" style="margin-bottom: 15px;"><h4>Equal Frequency Binning</h4><p>같은 개수가 들어가도록 구간 나누기</p><p>각 구간에 동일한 데이터 개수</p></div><div class="box"><h4>Custom Binning</h4><p>도메인 지식으로 직접 구간 설정</p><p>예: 나이 → 청년/중년/노년</p></div><div class="example-box" style="margin-top: 20px;"><h4>언제 사용?</h4><p>✓ 비선형 관계를 단순화할 때</p><p>✓ 이상치의 영향을 줄일 때</p><p>✓ 해석 가능성을 높일 때</p></div>
+===SPLIT===
+<h2>Binning 예제</h2><h3>나이 데이터 구간화</h3><div class="example-box"><h4>원본 데이터</h4><p>나이: [22, 25, 35, 45, 52, 58, 67, 72]</p></div><div class="comparison-box" style="margin-top: 20px;"><div class="box"><h4>Equal Width (너비 30)</h4><p>[20-50]: 22, 25, 35, 45</p><p>[50-80]: 52, 58, 67, 72</p></div><div class="box"><h4>Custom (도메인 지식)</h4><p>청년 [~30]: 22, 25</p><p>중년 [31-60]: 35, 45, 52, 58</p><p>노년 [61~]: 67, 72</p></div></div><div class="success-box" style="margin-top: 20px;"><p><strong>장점</strong></p><p>✅ 비선형 관계 포착</p><p>✅ 이상치 영향 감소</p><p>✅ 해석 용이</p></div><div class="warning-box" style="margin-top: 15px;"><p><strong>주의</strong></p><p>⚠️ 정보 손실 가능</p><p>⚠️ 구간 개수 선택이 중요</p></div>
+===SPLIT===
+<h2>Binning 실습</h2><pre><code>import pandas as pd
+import numpy as np
+from sklearn.preprocessing import KBinsDiscretizer
+
+# 데이터 생성
+ages = np.array([22, 25, 35, 45, 52, 58, 67, 72]).reshape(-1, 1)
+
+# Equal Width Binning
+kbd_width = KBinsDiscretizer(n_bins=3, encode='ordinal', strategy='uniform')
+age_binned_width = kbd_width.fit_transform(ages)
+print("Equal Width:", age_binned_width.ravel())
+
+# Equal Frequency Binning  
+kbd_freq = KBinsDiscretizer(n_bins=3, encode='ordinal', strategy='quantile')
+age_binned_freq = kbd_freq.fit_transform(ages)
+print("Equal Frequency:", age_binned_freq.ravel())
+
+# Custom Binning with pandas
+df = pd.DataFrame({'age': ages.ravel()})
+df['age_group'] = pd.cut(df['age'], 
+                         bins=[0, 30, 60, 100],
+                         labels=['청년', '중년', '노년'])
+print(df)</code></pre><div class="success-box" style="margin-top: 15px;"><p><strong>출력:</strong></p><p>Equal Width: [0. 0. 1. 1. 2. 2. 2. 2.]</p><p>Equal Frequency: [0. 0. 0. 1. 1. 1. 2. 2.]</p></div>
+===SPLIT===
+<h2>Polynomial Features</h2><h3>비선형 관계를 선형 모델로 학습</h3><div class="box" style="margin-bottom: 15px;"><h4>기본 아이디어</h4><p>원래 피처: x₁, x₂</p><p>2차 다항식: x₁, x₂, x₁², x₁x₂, x₂²</p><p>3차 다항식: x₁, x₂, x₁², x₁x₂, x₂², x₁³, x₁²x₂, x₁x₂², x₂³</p></div><div class="example-box"><h4>실제 예시</h4><p>키(x₁)와 몸무게(x₂)로 BMI 예측</p><p>→ 선형 모델만으로는 부족</p><p>→ 키², 키×몸무게 추가하면 성능 향상!</p></div><div class="comparison-box"><div class="success-box"><h4>장점</h4><p>✅ 비선형 관계 학습</p><p>✅ 간단한 구현</p><p>✅ 해석 가능</p></div><div class="warning-box"><h4>단점</h4><p>⚠️ 피처 수 폭발</p><p>⚠️ Overfitting 위험</p><p>⚠️ 계산 비용 증가</p></div></div>
+===SPLIT===
+<h2>Polynomial Features 실습</h2><pre><code>from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+import numpy as np
+
+# 비선형 데이터 생성
+X = np.array([[1], [2], [3], [4], [5]])
+y = np.array([2, 7, 16, 29, 46])  # y = 2x² - 3x + 2
+
+# 1차 (선형) 모델
+model_linear = LinearRegression()
+model_linear.fit(X, y)
+print("선형 모델 R²:", model_linear.score(X, y))
+
+# 2차 다항식 피처 생성
+poly = PolynomialFeatures(degree=2)
+X_poly = poly.fit_transform(X)
+print("변환된 피처:", X_poly[0])  # [1, x, x²]
+
+# 2차 다항식 모델
+model_poly = LinearRegression()
+model_poly.fit(X_poly, y)
+print("다항식 모델 R²:", model_poly.score(X_poly, y))
+
+# 결과: 다항식 모델이 훨씬 높은 정확도!
+</code></pre><div class="success-box" style="margin-top: 15px;"><p><strong>결과:</strong> 선형 R² ≈ 0.95, 다항식 R² ≈ 1.00</p></div>
+===SPLIT===
+<h2>Feature Generation 정리</h2><table><tr><th>방법</th><th>사용 시기</th><th>장점</th><th>단점</th></tr><tr><td><strong>Binning</strong></td><td>연속형을 범주로</td><td>해석 쉬움<br>이상치 강건</td><td>정보 손실<br>구간 선택 어려움</td></tr><tr><td><strong>Polynomial</strong></td><td>비선형 관계</td><td>표현력 증가<br>간단한 구현</td><td>피처 폭발<br>Overfitting</td></tr></table><div class="success-box" style="margin-top: 20px;"><h4>실전 팁</h4><p>1. 도메인 지식 활용 (Custom Binning)</p><p>2. Cross-validation으로 차수 결정</p><p>3. Regularization과 함께 사용</p><p>4. Feature Selection과 조합</p></div>
+===SPLIT===
+<h2>Feature Selection: 왜 피처를 선택해야 할까?</h2><div class="warning-box"><p><strong>차원의 저주</strong></p><ul><li>피처가 1000개인데 진짜 중요한 건 10개뿐</li><li>불필요한 피처가 노이즈를 만듦</li><li>학습 시간이 너무 오래 걸림</li><li>Overfitting 발생</li></ul></div><div class="example-box"><p style="font-size: 20px; color: #667eea; font-weight: bold;">Occam's Razor (오컴의 면도날)</p><p style="margin-top: 15px;">"같은 성능이면 더 간단한 모델이 낫다"</p></div><div class="success-box"><p><strong>Feature Selection의 이점</strong></p><p>✅ 모델 성능 향상</p><p>✅ 학습 시간 단축</p><p>✅ Overfitting 방지</p><p>✅ 해석 용이</p></div>
+===SPLIT===
+<h2>Feature Selection 방법론</h2><h3>3가지 접근법</h3><div class="box" style="margin-bottom: 15px;"><h4>1. Filter Method (필터 방식)</h4><p>통계적 지표로 피처 평가</p><p>예: 상관계수, Chi-square, Mutual Information</p><p><strong>특징:</strong> 빠름, 모델 독립적</p></div><div class="box" style="margin-bottom: 15px;"><h4>2. Wrapper Method (래퍼 방식)</h4><p>모델 성능으로 피처 조합 평가</p><p>예: Forward Selection, Backward Elimination, RFE</p><p><strong>특징:</strong> 정확, 느림, 모델 의존적</p></div><div class="box"><h4>3. Embedded Method (임베디드 방식)</h4><p>모델 학습 중 피처 선택</p><p>예: Lasso, Ridge, Tree-based Feature Importance</p><p><strong>특징:</strong> 균형잡힌 속도와 정확도</p></div>
+===SPLIT===
+<h2>Filter Method</h2><h3>통계적 지표로 빠르게 선택</h3><div class="comparison-box"><div class="box"><h4>상관계수</h4><p>Pearson correlation</p><p>선형 관계 측정</p><p>범위: -1 ~ 1</p></div><div class="box"><h4>Chi-square</h4><p>카이제곱 검정</p><p>범주형 변수에 적합</p><p>독립성 테스트</p></div></div><div class="comparison-box"><div class="box"><h4>Mutual Information</h4><p>상호 정보량</p><p>비선형 관계도 포착</p><p>정보 이론 기반</p></div><div class="box"><h4>Variance Threshold</h4><p>분산 임계값</p><p>변화 없는 피처 제거</p><p>빠른 전처리</p></div></div><div class="success-box" style="margin-top: 20px;"><p><strong>장점:</strong> 빠름, 모델 독립적, 다중공선성 탐지</p></div><div class="warning-box" style="margin-top: 15px;"><p><strong>단점:</strong> 피처 간 상호작용 무시, 모델 특성 미반영</p></div>
+===SPLIT===<h2>Chi-square Test 상세</h2><h3>범주형 변수 간 독립성 검정</h3><div class="box" style="margin-bottom: 15px;"><h4>기본 개념</h4><p>두 범주형 변수가 서로 독립적인가?</p><p>χ² 값이 클수록 → 두 변수가 연관있음</p><p>Target이 범주형일 때 Feature 선택에 사용</p></div><div class="formula">χ² = Σ [(관측값 - 기댓값)² / 기댓값]</div><div class="example-box"><h4>실제 예시</h4><p><strong>상황:</strong> 성별과 제품 구매의 관계</p><table style="margin-top: 10px;"><tr><th></th><th>구매</th><th>미구매</th><th>합계</th></tr><tr><td>남성</td><td>30</td><td>20</td><td>50</td></tr><tr><td>여성</td><td>15</td><td>35</td><td>50</td></tr><tr><td>합계</td><td>45</td><td>55</td><td>100</td></tr></table><p style="margin-top: 10px;">만약 독립이면 남성-구매 기댓값 = (50×45)/100 = 22.5</p><p>실제 30 vs 기댓값 22.5 → 차이가 큼!</p><p>→ χ² 값 계산 → 높으면 연관있음</p></div><div class="success-box" style="margin-top: 15px;"><p><strong>언제 사용?</strong></p><p>✅ 범주형 Target + 범주형 Feature</p><p>✅ 웹 클릭 예측, 마케팅 반응 예측</p><p>✅ 모든 값이 양수여야 함</p></div>===SPLIT===<h2>F-statistic (ANOVA) 상세</h2><h3>그룹 간 평균 차이 검정</h3><div class="box" style="margin-bottom: 15px;"><h4>기본 개념</h4><p>연속형 Feature로 범주형 Target을 구분할 수 있나?</p><p>여러 그룹의 평균이 통계적으로 다른가?</p></div><div class="formula">F = (그룹 간 분산) / (그룹 내 분산)<br>F값 클수록 → Feature가 Target 구분에 유용</div><div class="example-box"><h4>직관적 설명</h4><p><strong>상황:</strong> 키로 성별 구분 가능한가?</p><p>남성 키: [170, 175, 180, 172, 178] → 평균 175cm</p><p>여성 키: [155, 160, 158, 162, 165] → 평균 160cm</p><p style="margin-top: 10px;"><strong>그룹 간 분산:</strong> 남성/여성 평균이 많이 다름 (175 vs 160)</p><p><strong>그룹 내 분산:</strong> 각 그룹 내에서 키가 비슷함</p><p style="margin-top: 10px;">→ F값이 크다 = 키로 성별 구분 가능!</p></div><div class="success-box" style="margin-top: 15px;"><p><strong>사용 시기</strong></p><p>✅ 연속형 Feature + 분류 문제</p><p>✅ 혈압으로 질병 구분, 점수로 등급 구분</p><p>✅ SelectKBest에서 score_func=f_classif</p></div>===SPLIT===<h2>Mutual Information 상세</h2><h3>정보 이론 기반 Feature 선택</h3><div class="box" style="margin-bottom: 15px;"><h4>핵심 아이디어</h4><p>Feature X를 알면 Target Y에 대해 얼마나 더 알게 되나?</p><p>정보의 불확실성(엔트로피) 감소량 측정</p></div><div class="formula">MI(X,Y) = H(Y) - H(Y|X)<br>H(Y) = Target의 불확실성<br>H(Y|X) = Feature 알고 난 후 불확실성<br>MI 클수록 → Feature가 유용</div><div class="example-box"><h4>실생활 비유</h4><p><strong>상황:</strong> 내일 비가 올까? (Target)</p><p style="margin-top: 10px;"><strong>Feature 1: 구름 양</strong></p><p>→ 구름 많으면 비 올 확률 높음</p><p>→ MI 높음 (불확실성이 많이 줄어듦)</p><p style="margin-top: 10px;"><strong>Feature 2: 오늘 요일</strong></p><p>→ 요일과 날씨는 관계 없음</p><p>→ MI 낮음 (불확실성 그대로)</p></div><div class="success-box" style="margin-top: 15px;"><p><strong>Mutual Information의 장점</strong></p><p>✅ 비선형 관계도 포착 (상관계수보다 강력)</p><p>✅ 범주형/연속형 모두 사용 가능</p><p>✅ 일반적이고 강력한 방법</p></div><div class="warning-box" style="margin-top: 10px;"><p>⚠️ 계산 비용이 상대적으로 높음</p><p>⚠️ 고차원에서 추정 어려움</p></div>===SPLIT===<h2>Variance Threshold 상세</h2><h3>분산 기반 Feature 필터링</h3><div class="box" style="margin-bottom: 15px;"><h4>핵심 원리</h4><p>분산이 낮다 = 값이 거의 안 변한다 = 정보 없다</p><p>분산이 임계값보다 낮으면 제거</p></div><div class="example-box"><h4>극단적 예시</h4><p><strong>Feature 1:</strong> [1, 1, 1, 1, 1]</p><p>→ 분산 = 0 (모든 값이 같음)</p><p>→ 정보 없음! 제거 대상</p><p style="margin-top: 15px;"><strong>Feature 2:</strong> [1, 5, 3, 9, 2]</p><p>→ 분산 = 8.8 (값이 다양함)</p><p>→ 정보 있음! 유지</p><p style="margin-top: 15px;">threshold = 1.0 설정시</p><p>→ Feature 1 제거, Feature 2 유지</p></div><div class="success-box" style="margin-top: 15px;"><p><strong>사용 시기</strong></p><p>✅ 전처리 첫 단계로 사용</p><p>✅ Constant features 빠르게 제거</p><p>✅ Quasi-constant features 제거</p></div><div class="warning-box" style="margin-top: 10px;"><h4>주의사항</h4><p>⚠️ 스케일에 민감!</p><p>예: [1000, 1001, 1002] vs [0.1, 0.5, 0.9]</p><p>→ 전자가 분산 높지만 상대적 변화는 작음</p><p>→ StandardScaler 먼저 적용 권장</p></div>===SPLIT===
+<h2>Filter Method 실습</h2><pre><code>from sklearn.datasets import load_iris
+from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif
+import pandas as pd
+
+# 데이터 로드
+iris = load_iris()
+X, y = iris.data, iris.target
+
+# 1. F-statistic (ANOVA)
+selector_f = SelectKBest(score_func=f_classif, k=2)
+X_f = selector_f.fit_transform(X, y)
+print("F-statistic scores:", selector_f.scores_)
+print("선택된 피처:", selector_f.get_support())
+
+# 2. Mutual Information
+selector_mi = SelectKBest(score_func=mutual_info_classif, k=2)
+X_mi = selector_mi.fit_transform(X, y)
+print("MI scores:", selector_mi.scores_)
+
+# 3. Variance Threshold
+from sklearn.feature_selection import VarianceThreshold
+selector_var = VarianceThreshold(threshold=0.2)
+X_var = selector_var.fit_transform(X)
+print("Variance:", selector_var.variances_)
+print("선택된 피처 수:", X_var.shape[1])
+</code></pre>
+===SPLIT===
+<h2>Wrapper Method</h2><h3>모델 성능으로 최적 조합 찾기</h3><div class="box" style="margin-bottom: 15px;"><h4>Forward Selection (전진 선택)</h4><p>피처를 하나씩 추가하며 성능 확인</p><p>1개 → 2개 → 3개 → ...</p><p>성능이 향상될 때까지</p></div><div class="box" style="margin-bottom: 15px;"><h4>Backward Elimination (후진 제거)</h4><p>모든 피처에서 시작, 하나씩 제거</p><p>전체 → (전체-1) → (전체-2) → ...</p><p>성능이 유지되는 한 제거</p></div><div class="box"><h4>RFE (Recursive Feature Elimination)</h4><p>모델 기반으로 재귀적 제거</p><p>중요도 낮은 피처부터 제거</p><p>sklearn에서 쉽게 사용</p></div><div class="comparison-box" style="margin-top: 20px;"><div class="success-box"><h4>장점</h4><p>✅ 최적 조합 발견</p><p>✅ 피처 간 상호작용 고려</p></div><div class="warning-box"><h4>단점</h4><p>⚠️ 계산 비용 높음</p><p>⚠️ Overfitting 위험</p></div></div>
+===SPLIT===<h2>RFE 상세 설명</h2><h3>Recursive Feature Elimination</h3><div class="box" style="margin-bottom: 15px;"><h4>작동 원리 (단계별)</h4><p><strong>Step 1:</strong> 모든 Feature로 모델 학습</p><p>→ 각 Feature의 중요도 계산</p><p>→ 가장 중요하지 않은 Feature 제거</p><p style="margin-top: 10px;"><strong>Step 2:</strong> 남은 Feature로 다시 학습</p><p>→ 다시 중요도 계산</p><p>→ 또 가장 중요하지 않은 Feature 제거</p><p style="margin-top: 10px;"><strong>반복...</strong> 원하는 개수까지</p></div><div class="example-box"><h4>실제 예시</h4><p>유방암 진단 (30개 Feature)</p><p>→ RFE로 10개만 선택하고 싶음</p><p style="margin-top: 10px;"><strong>제거 순서:</strong></p><p>1. "texture error" 제거 (중요도 최하)</p><p>2. "symmetry se" 제거</p><p>3. "fractal dimension se" 제거</p><p>... 20개 제거 ...</p><p style="margin-top: 10px;"><strong>최종:</strong> 가장 중요한 10개만 남음</p><p>예: "worst radius", "mean concavity" 등</p></div><div class="comparison-box" style="margin-top: 15px;"><div class="success-box"><h4>장점</h4><p>✅ 모델 성능에 직접 기반</p><p>✅ Feature 간 상호작용 고려</p><p>✅ sklearn에서 쉽게 사용</p></div><div class="warning-box"><h4>단점</h4><p>⚠️ 학습을 여러 번 반복 → 느림</p><p>⚠️ Feature 많으면 시간 오래 걸림</p></div></div>===SPLIT===<h2>Forward vs Backward Selection</h2><h3>두 가지 탐색 전략</h3><div class="comparison-box"><div class="box"><h4>Forward Selection (전진 선택)</h4><p><strong>시작:</strong> 빈 집합</p><p><strong>방향:</strong> Feature 하나씩 추가</p><p><strong>종료:</strong> 성능 향상 없을 때</p><p style="margin-top: 10px;"><strong>예시:</strong></p><p>→ A 추가 (정확도 75%)</p><p>→ A+B 추가 (78%)</p><p>→ A+B+C 추가 (79%)</p><p>→ A+B+C+D 추가 (78.5%) ← 하락</p><p>→ 중단! 최종: A, B, C</p></div><div class="box"><h4>Backward Elimination (후진 제거)</h4><p><strong>시작:</strong> 모든 Feature</p><p><strong>방향:</strong> Feature 하나씩 제거</p><p><strong>종료:</strong> 성능 하락할 때</p><p style="margin-top: 10px;"><strong>예시:</strong></p><p>시작: A,B,C,D,E (정확도 85%)</p><p>→ B 제거 (85%) ← 유지</p><p>→ C 제거 (85%) ← 유지</p><p>→ D 제거 (83%) ← 하락</p><p>→ 중단! 최종: A, D, E</p></div></div><div class="success-box" style="margin-top: 15px;"><h4>어떤 것을 선택?</h4><p><strong>Forward:</strong> Feature 적을 것 같을 때, 빠른 탐색</p><p><strong>Backward:</strong> Feature 간 상호작용 중요할 때</p><p><strong>RFE:</strong> 실무에서는 RFE가 가장 많이 사용됨</p></div>===SPLIT===
+<h2>Wrapper Method 실습</h2><pre><code>from sklearn.feature_selection import RFE
+from sklearn.linear_model import LogisticRegression
+from sklearn.datasets import load_breast_cancer
+
+# 데이터 로드
+cancer = load_breast_cancer()
+X, y = cancer.data, cancer.target
+
+# RFE로 피처 선택
+model = LogisticRegression(max_iter=10000)
+rfe = RFE(estimator=model, n_features_to_select=10)
+X_rfe = rfe.fit_transform(X, y)
+
+print("전체 피처 수:", X.shape[1])
+print("선택된 피처 수:", X_rfe.shape[1])
+print("피처 순위:", rfe.ranking_)
+print("선택된 피처:", [cancer.feature_names[i] 
+                     for i in range(len(rfe.support_)) 
+                     if rfe.support_[i]])
+
+# 성능 비교
+from sklearn.model_selection import cross_val_score
+score_all = cross_val_score(model, X, y, cv=5).mean()
+score_rfe = cross_val_score(model, X_rfe, y, cv=5).mean()
+print(f"전체 피처 정확도: {score_all:.3f}")
+print(f"선택된 피처 정확도: {score_rfe:.3f}")
+</code></pre>
+===SPLIT===
+<h2>Embedded Method</h2><h3>학습하면서 피처 선택</h3><div class="box" style="margin-bottom: 15px;"><h4>Lasso (L1 Regularization)</h4><p>L = Loss + λ Σ|w|</p><p>불필요한 가중치를 0으로 만듦</p><p>자동으로 피처 선택 효과</p></div><div class="box" style="margin-bottom: 15px;"><h4>Ridge (L2 Regularization)</h4><p>L = Loss + λ Σw²</p><p>가중치를 작게 만듦</p><p>모든 피처 유지하지만 영향 감소</p></div><div class="box" style="margin-bottom: 15px;"><h4>Tree-based Importance</h4><p>Random Forest, XGBoost 등</p><p>각 피처의 중요도 계산</p><p>Gini importance 또는 Gain</p></div><div class="box"><h4>ElasticNet</h4><p>L1 + L2 조합</p><p>Lasso와 Ridge 장점 결합</p></div>
+===SPLIT===<h2>Lasso (L1) 상세 설명</h2><h3>가중치를 0으로 만드는 마법</h3><div class="box" style="margin-bottom: 15px;"><h4>기본 개념</h4><p>일반 Regression + Penalty 항</p><p>불필요한 Feature의 가중치를 정확히 0으로!</p></div><div class="formula">Loss = Σ(y - ŷ)² + λ·Σ|w|<br>↑           ↑<br>원래 손실    L1 penalty<br><br>λ 크면 → 많은 Feature가 0<br>λ 작으면 → 일반 Regression과 비슷</div><div class="example-box"><h4>왜 0이 될까? (수학적 직관)</h4><p>L1 norm은 "다이아몬드" 모양</p><p>최적점이 축(axis)에 닿기 쉬움</p><p>→ 어떤 가중치가 정확히 0이 됨</p><p style="margin-top: 15px;"><strong>반면 L2 (Ridge)는:</strong></p><p>원형이라 축에 잘 안 닿음</p><p>→ 0이 아닌 작은 값으로 수렴</p></div><div class="success-box" style="margin-top: 15px;"><p><strong>실전 활용</strong></p><p>✅ 자동으로 Feature selection</p><p>✅ 해석 가능한 sparse model</p><p>✅ 다중공선성 문제 해결</p></div><div class="warning-box" style="margin-top: 10px;"><p>⚠️ 상관관계 높은 Feature 중 하나만 선택</p><p>⚠️ Feature 수 > Sample 수 일 때 한계</p></div>===SPLIT===<h2>Lasso vs Ridge 비교</h2><h3>L1 vs L2 Regularization</h3><div class="formula">Lasso: Loss + λ·Σ|w|<br>Ridge: Loss + λ·Σ(w²)</div><div class="comparison-box" style="margin-top: 20px;"><div class="box"><h4>Lasso (L1)</h4><p><strong>가중치:</strong> 일부는 0, 일부는 큰 값</p><p><strong>효과:</strong> Feature Selection</p><p><strong>결과:</strong> Sparse Model (희소)</p><p style="margin-top: 10px;"><strong>예시:</strong></p><p>Feature A: 0.8</p><p>Feature B: 0.0 ← 제거!</p><p>Feature C: 0.0 ← 제거!</p><p>Feature D: 0.6</p></div><div class="box"><h4>Ridge (L2)</h4><p><strong>가중치:</strong> 모두 작은 값</p><p><strong>효과:</strong> Regularization만</p><p><strong>결과:</strong> Dense Model (밀집)</p><p style="margin-top: 10px;"><strong>예시:</strong></p><p>Feature A: 0.4</p><p>Feature B: 0.3</p><p>Feature C: 0.2</p><p>Feature D: 0.4</p></div></div><div class="success-box" style="margin-top: 15px;"><h4>언제 무엇을 사용?</h4><p><strong>Lasso 사용:</strong></p><p>✓ Feature selection이 목표</p><p>✓ 진짜 중요한 Feature만 일부</p><p>✓ 해석 가능성 중요</p><p style="margin-top: 10px;"><strong>Ridge 사용:</strong></p><p>✓ 모든 Feature가 어느 정도 영향</p><p>✓ Feature 간 상관관계 높음</p><p>✓ Overfitting만 방지</p></div>===SPLIT===<h2>Tree-based Importance 상세</h2><h3>Feature 중요도 자동 계산</h3><div class="box" style="margin-bottom: 15px;"><h4>기본 개념</h4><p>Decision Tree, Random Forest, XGBoost 등</p><p>학습 중 각 Feature가 split에 얼마나 기여했는지 계산</p><p>자동으로 feature_importances_ 속성에 저장</p></div><div class="example-box"><h4>작동 원리 (Gini Importance)</h4><p><strong>Tree 예시: 질병 예측</strong></p><p style="margin-top: 10px;">나이 > 50?</p><p>├─ Yes: 질병</p><p>└─ No: 체온 > 37?</p><p>     ├─ Yes: 질병</p><p>     └─ No: 정상</p><p style="margin-top: 15px;"><strong>해석:</strong></p><p>• "나이"가 첫 split → 중요!</p><p>• "체온"이 두 번째 → 덜 중요</p><p style="margin-top: 10px;">여러 Tree 결과를 평균</p><p>→ 최종 중요도 점수</p></div><div class="success-box" style="margin-top: 15px;"><p><strong>장점</strong></p><p>✅ 비선형 관계 포착</p><p>✅ Feature 간 상호작용 고려</p><p>✅ 추가 계산 없이 자동</p><p>✅ 실무에서 가장 많이 사용</p></div><div class="warning-box" style="margin-top: 10px;"><p>⚠️ Cardinality 높은 Feature 선호</p><p>⚠️ 상관관계 높은 Feature 간 중요도 분산</p></div>===SPLIT===<h2>ElasticNet 상세</h2><h3>Lasso + Ridge의 하이브리드</h3><div class="box" style="margin-bottom: 15px;"><h4>기본 개념</h4><p>L1과 L2 Penalty를 동시에 사용</p><p>각각의 장점을 결합</p></div><div class="formula">Loss = Σ(y-ŷ)² + λ·[α·Σ|w| + (1-α)·Σ(w²)]<br>                    ↑              ↑<br>                  L1 비율       L2 비율<br><br>α = 1: Pure Lasso<br>α = 0: Pure Ridge<br>0 < α < 1: 혼합</div><div class="example-box"><h4>왜 ElasticNet?</h4><p><strong>상황:</strong> Feature A, B, C가 상관관계 높음</p><p style="margin-top: 10px;"><strong>Lasso:</strong></p><p>→ 하나만 선택 (A만 유지)</p><p>→ 정보 손실 가능</p><p style="margin-top: 10px;"><strong>Ridge:</strong></p><p>→ 모두 유지 (작은 값으로)</p><p>→ Feature selection 효과 없음</p><p style="margin-top: 10px;"><strong>ElasticNet:</strong></p><p>→ 그룹으로 선택 (A, B 유지, C 제거)</p><p>→ 최선의 균형!</p></div><div class="success-box" style="margin-top: 15px;"><h4>파라미터 선택 가이드</h4><p><strong>l1_ratio 선택:</strong></p><p>• 0.95~0.99: Lasso에 가까움 (Feature selection 강조)</p><p>• 0.5: 균형 (일반적으로 좋은 시작점)</p><p>• 0.01~0.05: Ridge에 가까움 (Grouping 강조)</p><p style="margin-top: 10px;"><strong>alpha 선택:</strong></p><p>GridSearchCV로 최적값 찾기</p><p>범위: [0.001, 0.01, 0.1, 1, 10, 100]</p></div>===SPLIT===
+<h2>Embedded Method 실습</h2><pre><code>
+from sklearn.linear_model import Lasso, Ridge
+from sklearn.tree import DecisionTreeClassifier
+import numpy as np
+
+# 데이터 로드
+X, y = load_breast_cancer(return_X_y=True)
+
+# 1. Lasso
+lasso = Lasso(alpha=0.01)
+lasso.fit(X, y)
+lasso_coef = np.abs(lasso.coef_)
+print("Lasso - 0인 계수:", np.sum(lasso_coef == 0))
+
+rf = DecisionTreeClassifier(max_depth=5, random_state=42)
+rf.fit(X, y)
+importances = rf.feature_importances_
+
+# 상위 10개 중요 피처
+indices = np.argsort(importances)[::-1][:10]
+print("\nTop 10 중요 피처:")
+for i in indices:
+    print(f"{cancer.feature_names[i]}: {importances[i]:.4f}")
+
+# 시각화
+import matplotlib.pyplot as plt
+plt.figure(figsize=(10, 5))
+plt.bar(range(10), importances[indices])
+plt.xticks(range(10), [cancer.feature_names[i] for i in indices], 
+           rotation=45, ha='right')
+plt.title('Feature Importance')
+plt.tight_layout()
+plt.show()
+</code></pre>
+===SPLIT===
+<h2>Feature Selection 방법 비교</h2><table><tr><th>방법</th><th>속도</th><th>정확도</th><th>모델 의존</th><th>사용 시기</th></tr><tr><td><strong>Filter</strong></td><td>⚡⚡⚡</td><td>⭐⭐</td><td>독립적</td><td>빠른 탐색<br>대용량 데이터</td></tr><tr><td><strong>Wrapper</strong></td><td>⚡</td><td>⭐⭐⭐</td><td>의존적</td><td>최적 성능<br>소규모 데이터</td></tr><tr><td><strong>Embedded</strong></td><td>⚡⚡</td><td>⭐⭐⭐</td><td>의존적</td><td>실무 추천<br>균형잡힌 선택</td></tr></table><div class="success-box" style="margin-top: 20px;"><h4>실전 추천 전략</h4><p>1. Filter로 빠르게 명확히 불필요한 피처 제거</p><p>2. Embedded로 모델 학습하며 선택</p><p>3. 중요한 프로젝트면 Wrapper로 정밀 조정</p></div>
+===SPLIT===
+<h2>이상치 탐지: 왜 필요한가?</h2><div class="warning-box"><p><strong>이상치의 파괴력</strong></p><ul><li>평균이 왜곡된다: [1,2,3,1000] → 평균 251.5</li><li>모델이 이상치에 맞춰진다</li><li>예측 성능이 크게 떨어진다</li><li>잘못된 의사결정으로 이어진다</li></ul></div><div class="example-box"><p style="font-size: 20px; color: #667eea; font-weight: bold;">실제 사례</p><p style="margin-top: 15px;">연봉 예측 모델에서 한 명의 잘못된 데이터(9999억원)<br>→ 전체 예측이 비정상적으로 높아짐</p></div><div class="success-box"><p><strong>이상치 탐지의 중요성</strong></p><p>✅ 데이터 품질 향상</p><p>✅ 모델 성능 개선</p><p>✅ 사기 탐지, 보안</p><p>✅ 고장 예측</p></div>
+===SPLIT===
+<h2>이상치란?</h2><h3>정상 패턴에서 벗어난 데이터</h3><div class="comparison-box"><div class="box"><h4>Point Anomaly</h4><p>개별 점이 이상</p><p>예: 키 250cm</p></div><div class="box"><h4>Contextual Anomaly</h4><p>맥락에서 이상</p><p>예: 여름에 영하 20도</p></div></div><div class="comparison-box"><div class="box"><h4>Collective Anomaly</h4><p>집단이 이상</p><p>예: 특정 시간대 트래픽 급증</p></div><div class="box"><h4>Types</h4><p>Global: 전체 데이터 기준</p><p>Local: 주변 데이터 기준</p></div></div><div class="example-box" style="margin-top: 20px;"><h4>이상치 vs 에러</h4><p><strong>이상치:</strong> 진짜 데이터지만 희귀함 (발견 가치 있음)</p><p><strong>에러:</strong> 측정 오류 (제거해야 함)</p></div>
+===SPLIT===
+<h2>Z-Score Method</h2><h3>표준편차 기반 탐지</h3><div class="box" style="margin-bottom: 15px;"><h4>개념</h4><p>Z-Score = (x - μ) / σ</p><p>평균에서 몇 표준편차 떨어졌나?</p><p>일반적으로 |Z| > 3이면 이상치</p></div><div class="formula">Z = (x - mean) / std<br>|Z| > 3 → Outlier</div><div class="comparison-box"><div class="success-box"><h4>장점</h4><p>✅ 간단하고 직관적</p><p>✅ 빠른 계산</p><p>✅ 해석 쉬움</p></div><div class="warning-box"><h4>단점</h4><p>⚠️ 정규분포 가정</p><p>⚠️ 평균/분산에 민감</p><p>⚠️ 다변량 탐지 어려움</p></div></div><div class="example-box" style="margin-top: 20px;"><h4>언제 사용?</h4><p>✓ 데이터가 대략 정규분포를 따를 때</p><p>✓ 빠른 1차 필터링이 필요할 때</p></div>
+===SPLIT===
+<h2>Z-Score 실습</h2><pre><code>import numpy as np
+from scipy import stats
+
+# 데이터 생성 (정규분포 + 이상치)
+np.random.seed(42)
+data = np.random.normal(100, 15, 100)  # 평균 100, 표준편차 15
+data = np.append(data, [200, 10, 250])  # 이상치 추가
+
+# Z-Score 계산
+z_scores = np.abs(stats.zscore(data))
+threshold = 3
+
+# 이상치 탐지
+outliers = np.where(z_scores > threshold)
+print("이상치 인덱스:", outliers[0])
+print("이상치 값:", data[outliers])
+print("이상치 Z-Score:", z_scores[outliers])
+
+# 시각화
+import matplotlib.pyplot as plt
+plt.figure(figsize=(10, 5))
+plt.scatter(range(len(data)), data, c='blue', alpha=0.5)
+plt.scatter(outliers, data[outliers], c='red', s=100, label='Outliers')
+plt.axhline(y=np.mean(data) + 3*np.std(data), color='r', 
+            linestyle='--', label='3σ threshold')
+plt.axhline(y=np.mean(data) - 3*np.std(data), color='r', linestyle='--')
+plt.legend()
+plt.title('Z-Score Outlier Detection')
+plt.show()
+</code></pre>
+===SPLIT===
+<h2>IQR Method (Interquartile Range)</h2><h3>사분위수 기반 탐지</h3><div class="box" style="margin-bottom: 15px;"><h4>개념</h4><p>Q1 (25 percentile): 하위 25%</p><p>Q3 (75 percentile): 하위 75%</p><p>IQR = Q3 - Q1</p><p>이상치: < Q1 - 1.5×IQR 또는 > Q3 + 1.5×IQR</p></div><div class="formula">Lower = Q1 - 1.5 × IQR<br>Upper = Q3 + 1.5 × IQR<br>Outlier: x < Lower or x > Upper</div><div class="comparison-box"><div class="success-box"><h4>장점</h4><p>✅ 분포 가정 불필요</p><p>✅ 중앙값 기반 (robust)</p><p>✅ Box plot 직관적</p></div><div class="warning-box"><h4>단점</h4><p>⚠️ 다변량 탐지 어려움</p><p>⚠️ 극단값에 둔감할 수 있음</p></div></div><div class="example-box" style="margin-top: 20px;"><h4>언제 사용?</h4><p>✓ 데이터 분포를 모를 때</p><p>✓ 중간값 기반 탐지를 원할 때</p><p>✓ Box plot으로 시각화할 때</p></div>
+===SPLIT===
+<h2>IQR 실습</h2><pre><code>import numpy as np
+import matplotlib.pyplot as plt
+
+# 데이터 생성
+np.random.seed(42)
+data = np.random.normal(50, 10, 100)
+data = np.append(data, [0, 5, 95, 100])  # 이상치 추가
+
+# IQR 계산
+Q1 = np.percentile(data, 25)
+Q3 = np.percentile(data, 75)
+IQR = Q3 - Q1
+
+# 이상치 경계
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+# 이상치 탐지
+outliers_mask = (data < lower_bound) | (data > upper_bound)
+outliers = data[outliers_mask]
+
+print(f"Q1: {Q1:.2f}, Q3: {Q3:.2f}, IQR: {IQR:.2f}")
+print(f"Lower bound: {lower_bound:.2f}")
+print(f"Upper bound: {upper_bound:.2f}")
+print(f"이상치: {outliers}")
+
+# Box plot
+plt.figure(figsize=(10, 6))
+plt.boxplot(data, vert=False)
+plt.scatter(outliers, [1]*len(outliers), c='red', s=100, 
+            zorder=3, label='Outliers')
+plt.title('IQR Method - Box Plot')
+plt.legend()
+plt.show()
+</code></pre>
+===SPLIT===
+<h2>DBSCAN (Density-Based)</h2><h3>밀도 기반 군집화로 이상치 탐지</h3><div class="box" style="margin-bottom: 15px;"><h4>기본 아이디어</h4><p>밀도가 높은 지역 = 정상 데이터</p><p>밀도가 낮은 지역 = 이상치</p><p>군집에 속하지 못한 점 = Outlier</p></div><div class="box" style="margin-bottom: 15px;"><h4>핵심 파라미터</h4><p><strong>eps:</strong> 이웃 반경</p><p><strong>min_samples:</strong> 최소 이웃 개수</p><p>Label -1 = 이상치</p></div><div class="comparison-box"><div class="success-box"><h4>장점</h4><p>✅ 다변량 탐지 가능</p><p>✅ 군집 모양 자유</p><p>✅ 군집 개수 지정 불필요</p></div><div class="warning-box"><h4>단점</h4><p>⚠️ 파라미터 조정 필요</p><p>⚠️ 고차원에서 성능 저하</p><p>⚠️ 밀도 변화 대응 어려움</p></div></div><div class="example-box" style="margin-top: 20px;"><h4>언제 사용?</h4><p>✓ 2D/3D 공간 데이터</p><p>✓ 복잡한 패턴의 이상치</p><p>✓ 군집화 + 이상치 탐지 동시에</p></div>
+===SPLIT===
+<h2>DBSCAN 실습</h2><pre><code>from sklearn.cluster import DBSCAN
+from sklearn.datasets import make_blobs
+import matplotlib.pyplot as plt
+
+# 데이터 생성 (정상 + 이상치)
+X, _ = make_blobs(n_samples=300, centers=3, random_state=42)
+X = np.vstack([X, [[10, 10], [-10, -10], [10, -10]]])  # 이상치 추가
+
+# DBSCAN 적용
+dbscan = DBSCAN(eps=0.5, min_samples=5)
+labels = dbscan.fit_predict(X)
+
+# 이상치 추출
+outliers = X[labels == -1]
+inliers = X[labels != -1]
+
+print(f"정상 데이터: {len(inliers)}개")
+print(f"이상치: {len(outliers)}개")
+print(f"군집 개수: {len(set(labels)) - (1 if -1 in labels else 0)}개")
+
+# 시각화
+plt.figure(figsize=(10, 6))
+plt.scatter(inliers[:, 0], inliers[:, 1], c=labels[labels != -1], 
+            cmap='viridis', alpha=0.6, s=50)
+plt.scatter(outliers[:, 0], outliers[:, 1], c='red', 
+            s=100, marker='x', label='Outliers')
+plt.title('DBSCAN Outlier Detection')
+plt.legend()
+plt.show()
+</code></pre>
+===SPLIT===
+<h2>LOF (Local Outlier Factor)</h2><h3>지역 밀도 기반 이상치 탐지</h3><div class="box" style="margin-bottom: 15px;"><h4>기본 아이디어</h4><p>주변 이웃과 비교해서 얼마나 고립됐나?</p><p>LOF > 1: 주변보다 밀도 낮음 (이상치 가능)</p><p>LOF ≈ 1: 주변과 비슷한 밀도 (정상)</p></div><div class="formula">LOF(x) = (주변 이웃 평균 밀도) / (x의 밀도)<br>LOF >> 1 → Outlier</div><div class="comparison-box"><div class="success-box"><h4>장점</h4><p>✅ Local 이상치 탐지</p><p>✅ 다양한 밀도 대응</p><p>✅ DBSCAN보다 유연</p></div><div class="warning-box"><h4>단점</h4><p>⚠️ 계산 비용 높음</p><p>⚠️ K 선택 필요</p><p>⚠️ 고차원 성능 저하</p></div></div><div class="example-box" style="margin-top: 20px;"><h4>DBSCAN vs LOF</h4><p><strong>DBSCAN:</strong> Global density, 군집화 중심</p><p><strong>LOF:</strong> Local density, 이상치 탐지 중심</p></div>
+===SPLIT===
+<h2>LOF 실습</h2><pre><code>from sklearn.neighbors import LocalOutlierFactor
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 데이터 생성 (다양한 밀도의 군집)
+np.random.seed(42)
+X1 = np.random.normal(0, 0.5, (100, 2))  # 조밀한 군집
+X2 = np.random.normal(5, 1.5, (50, 2))   # 느슨한 군집
+X_outliers = np.array([[7, 7], [-3, -3], [0, 5]])  # 이상치
+X = np.vstack([X1, X2, X_outliers])
+
+# LOF 적용
+lof = LocalOutlierFactor(n_neighbors=20, contamination=0.05)
+labels = lof.fit_predict(X)
+scores = lof.negative_outlier_factor_
+
+# 이상치 추출
+outliers = X[labels == -1]
+inliers = X[labels == 1]
+
+print(f"정상 데이터: {len(inliers)}개")
+print(f"이상치: {len(outliers)}개")
+print(f"이상치 LOF scores: {scores[labels == -1]}")
+
+# 시각화
+plt.figure(figsize=(10, 6))
+plt.scatter(inliers[:, 0], inliers[:, 1], c='blue', 
+            alpha=0.6, s=50, label='Inliers')
+plt.scatter(outliers[:, 0], outliers[:, 1], c='red', 
+            s=200, marker='x', label='Outliers', linewidths=3)
+plt.title('LOF Outlier Detection')
+plt.legend()
+plt.show()
+</code></pre>
+===SPLIT===
+<h2>이상치 탐지 방법 비교</h2><table><tr><th>방법</th><th>타입</th><th>다변량</th><th>복잡도</th><th>사용 시기</th></tr><tr><td><strong>Z-Score</strong></td><td>통계</td><td>❌</td><td>O(n)</td><td>정규분포 데이터<br>빠른 탐지</td></tr><tr><td><strong>IQR</strong></td><td>통계</td><td>❌</td><td>O(n log n)</td><td>분포 모를 때<br>Box plot</td></tr><tr><td><strong>DBSCAN</strong></td><td>밀도</td><td>✅</td><td>O(n log n)</td><td>공간 데이터<br>군집화 동시에</td></tr><tr><td><strong>LOF</strong></td><td>밀도</td><td>✅</td><td>O(n²)</td><td>Local 이상치<br>다양한 밀도</td></tr></table><div class="success-box" style="margin-top: 20px;"><h4>실전 선택 가이드</h4><p>1. 빠른 탐색: Z-Score 또는 IQR</p><p>2. 공간 데이터: DBSCAN</p><p>3. 복잡한 패턴: LOF</p><p>4. 실전: 여러 방법 조합!</p></div>
+===SPLIT===
+<h2>실습 과제</h2><div class="box" style="margin-bottom: 15px;"><h4>과제 1: 당뇨병 데이터로 Feature Selection, Wrapper Method, 이상치 탐지 진행해보기</p></div>
+===SPLIT===
+<h2>1일차 총정리</h2><div class="box" style="margin-bottom: 15px;"><h4>Feature Generation</h4><p>Binning: 연속 → 범주</p><p>Polynomial: 비선형 관계 표현</p></div><div class="box" style="margin-bottom: 15px;"><h4>Feature Selection</h4><p>Filter: 빠른 통계적 선택</p><p>Wrapper: 최적 조합 탐색</p><p>Embedded: 학습 중 선택</p></div><div class="box" style="margin-bottom: 15px;"><h4>이상치 탐지</h4><p>Z-Score, IQR: 1차원 통계</p><p>DBSCAN, LOF: 다차원 밀도</p></div><div class="box"><h4>핵심 원칙</h4><p>도메인 지식 + 데이터 이해 + 실험</p></div>
+===SPLIT===
+<h2>핵심 메시지</h2><div style="text-align: center; margin-top: 60px;"><p style="font-size: 28px; color: #667eea; font-weight: bold; margin-bottom: 40px;">"좋은 피처가 좋은 모델을 만든다"</p><div class="success-box"><p style="font-size: 22px;"><strong>피처 엔지니어링의 철학</strong></p><ul style="text-align: left; margin-top: 20px;"><li>데이터를 이해하라</li><li>도메인 지식을 활용하라</li><li>단순함을 추구하라</li><li>실험하고 검증하라</li></ul></div><p style="font-size: 20px; color: #666; margin-top: 40px;">"알고리즘보다 데이터가 먼저다"</p></div>
+===SPLIT===
+<h2>실전 체크리스트</h2><div class="success-box" style="margin-bottom: 15px;"><h4>✅ Feature Engineering 체크리스트</h4><p>□ EDA로 데이터 이해했는가?</p><p>□ 도메인 지식을 반영했는가?</p><p>□ 새로운 피처가 의미있는가?</p><p>□ 불필요한 피처를 제거했는가?</p><p>□ 이상치를 확인했는가?</p></div><div class="warning-box" style="margin-bottom: 15px;"><h4>⚠️ 주의사항</h4><p>• Data Leakage 조심 (미래 정보 누출)</p><p>• Train/Test 분리 후 처리</p><p>• Cross-validation으로 검증</p><p>• Overfitting 경계</p></div><div class="example-box"><h4>💡 Pro Tips</h4><p>• Baseline 모델 먼저 만들기</p><p>• 한 번에 하나씩 변경하기</p><p>• 결과 기록하기</p><p>• 시각화로 확인하기</p></div>
+</div>`;
+
+        const slidesArray = slidesHTML.split('===SPLIT===');
+        const container = document.getElementById('slidesContainer');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentSlideSpan = document.getElementById('currentSlide');
+        const totalSlidesSpan = document.getElementById('totalSlides');
+        const pageInput = document.getElementById('pageInput');
+        const jumpBtn = document.getElementById('jumpBtn');
+
+        let currentSlide = 0;
+
+        slidesArray.forEach((slideContent, index) => {
+            const slideDiv = document.createElement('div');
+            slideDiv.className = 'slide';
+            slideDiv.innerHTML = slideContent.trim();
+            container.appendChild(slideDiv);
+        });
+
+        const slides = document.querySelectorAll('.slide');
+        totalSlidesSpan.textContent = slides.length;
+        pageInput.max = slides.length;
+
+        function showSlide(n) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            
+            if (n >= slides.length) {
+                currentSlide = slides.length - 1;
+            } else if (n < 0) {
+                currentSlide = 0;
+            } else {
+                currentSlide = n;
+            }
+
+            slides[currentSlide].classList.add('active');
+            currentSlideSpan.textContent = currentSlide + 1;
+
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+
+            pageInput.value = '';
+        }
+
+        prevBtn.addEventListener('click', () => {
+            showSlide(currentSlide - 1);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            showSlide(currentSlide + 1);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') {
+                return;
+            }
+            
+            if (e.key === 'ArrowLeft') {
+                showSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                showSlide(currentSlide + 1);
+            } else if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+        });
+
+        jumpBtn.addEventListener('click', () => {
+            const pageNum = parseInt(pageInput.value);
+            if (pageNum && pageNum >= 1 && pageNum <= slides.length) {
+                showSlide(pageNum - 1);
+            } else {
+                alert(`1부터 ${slides.length} 사이의 번호를 입력하세요.`);
+            }
+        });
+
+        pageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                jumpBtn.click();
+            }
+        });
+
+        showSlide(0);
+    </script>
+</body>
+</html>
